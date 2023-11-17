@@ -20,6 +20,10 @@ similar to WTTG
 lets just start with a terminal
 
 
+- figure out how to have no windows in focus
+
+
+
 i want it to be a terminal based game
 using stuff like ssh-ing into a machine
 and trying to learn information
@@ -106,3 +110,29 @@ idk what for though but would be fun to code a compiler and interpreter :)
 and impressive
 we're going for impressive
 but also need a playable game
+- a bash like langauge but useable :P
+
+
+
+https://squaremyimage.com/
+- to convert rect to square icons
+
+maybe add in a geoguessr element?
+- suspect's computer could have images on it
+- and you have to look through them
+- to determine what country they are in?
+
+- sign into someones computer and find out which country? by timezone?
+- widgets come into play
+
+location services widget
+- only shows when something is requesting your location
+- so a widget that is there sometimes and removed others
+
+additional widgets
+- 
+
+
+right click for popup options
+
+- make a really challenging multi-tasker mode
