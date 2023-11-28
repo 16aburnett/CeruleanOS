@@ -16,101 +16,82 @@ let is_wifi_on = true;
 
 //========================================================================
 
-class TaskBarButton
-{
-    constructor (x, y, name)
-    {
-        this.x = x;
-        this.y = y;
-        this.name = name;
+let generic_window_button0;
+let generic_window_button1;
+let generic_window_button2;
+let generic_window_button3;
 
-        this.width = taskbar_height-10;
-        this.height = taskbar_height-10;
-
-        this.is_being_pressed = false;
-    }
-
-    is_mouse_over ()
-    {
-        return this.x < mouseX && mouseX < this.x + this.width && this.y < mouseY && mouseY < this.y + this.height;
-    }
-
-    pressed ()
-    {
-        if (this.is_mouse_over ())
-            this.is_being_pressed = true;
-        else
-            this.is_being_pressed = false;
-    }
-    
-    released ()
-    {
-        if (this.is_being_pressed && this.is_mouse_over ())
-        {
-            // should this be moved out of the class/function?
-            windows.push (new Window (0, 0));
-            // focus the new window
-            is_a_window_focused = true;
-        }
-    }
-    
-    show (x, y)
-    {
-        this.x = x;
-        this.y = y;
-        noStroke ();
-        fill ("lime");
-        rect (this.x, this.y, this.width, this.height);
-        fill ("black");
-        let text_height = 24;
-        textSize (text_height);
-        let text_width = textWidth (this.name);
-        text (this.name, this.x+text_width/2.5, this.y+this.height/2+text_height/3);
-    }
-}
-
-let create_window_button;
+let terminal_window_button;
 
 // Images
-let taskbar_wifi_icon_full;
-let taskbar_wifi_icon_empty;
-let taskbar_battery_icon_0;
-let taskbar_battery_icon_25;
-let taskbar_battery_icon_50;
-let taskbar_battery_icon_75;
-let taskbar_battery_icon_full;
-let taskbar_settings_icon;
-let taskbar_location_icon;
+let taskbar_icon_generic_window;
+let taskbar_icon_wifi_full;
+let taskbar_icon_wifi_empty;
+let taskbar_icon_battery_0;
+let taskbar_icon_battery_25;
+let taskbar_icon_battery_50;
+let taskbar_icon_battery_75;
+let taskbar_icon_battery_full;
+let taskbar_icon_settings;
+let taskbar_icon_location;
+let taskbar_icon_terminal;
+let taskbar_icon_file_explorer;
+let taskbar_icon_calculator;
+let taskbar_icon_messages;
+let taskbar_icon_sound0;
+let taskbar_icon_sound1;
+let taskbar_icon_sound2;
+let taskbar_icon_sound3;
 
-let battery_widget;
-let battery_charge_percent = 100;
-
-let wifi_widget;
-let wifi_state = 1;
+// Date and time
 let date_time_widget;
 
-let is_location_being_requested = false;
+// Battery
+let battery_charge_percent = 100;
+let battery_widget;
+
+// Sound
+let sound_volume_level = 35;
+let sound_widget;
+
+// Wifi/internet
+const WIFI_DISCONNECTED = 0;
+const WIFI_CONNECTED    = 1;
+let wifi_state = WIFI_CONNECTED;
+let wifi_widget;
+
+// Location services
+let is_location_being_requested = true;
 let location_widget;
 
 let settings_widget;
 
 let taskbar_apps = [];
-
 let taskbar_widgets = [];
 
 //========================================================================
 
+// preload all images before drawing canvas
 function preload ()
 {
-    taskbar_wifi_icon_full     = loadImage ('assets/wifi_full.png');
-    taskbar_wifi_icon_empty    = loadImage ('assets/wifi_empty.png');
-    taskbar_battery_icon_0     = loadImage ('assets/battery_0.png');
-    taskbar_battery_icon_25    = loadImage ('assets/battery_25.png');
-    taskbar_battery_icon_50    = loadImage ('assets/battery_50.png');
-    taskbar_battery_icon_75    = loadImage ('assets/battery_75.png');
-    taskbar_battery_icon_full  = loadImage ('assets/battery_full.png');
-    taskbar_settings_icon      = loadImage ('assets/settings_icon.png');
-    taskbar_location_icon      = loadImage ('assets/location.png');
+    taskbar_icon_generic_window = loadImage ('assets/window.png');
+    taskbar_icon_wifi_full      = loadImage ('assets/wifi_full.png');
+    taskbar_icon_wifi_empty     = loadImage ('assets/wifi_empty.png');
+    taskbar_icon_battery_0      = loadImage ('assets/battery_0.png');
+    taskbar_icon_battery_25     = loadImage ('assets/battery_25.png');
+    taskbar_icon_battery_50     = loadImage ('assets/battery_50.png');
+    taskbar_icon_battery_75     = loadImage ('assets/battery_75.png');
+    taskbar_icon_battery_full   = loadImage ('assets/battery_full.png');
+    taskbar_icon_settings       = loadImage ('assets/settings_icon.png');
+    taskbar_icon_location       = loadImage ('assets/location.png');
+    taskbar_icon_terminal       = loadImage ('assets/terminal.png');
+    taskbar_icon_file_explorer  = loadImage ('assets/file_explorer.png');
+    taskbar_icon_calculator     = loadImage ('assets/calculator_light.png');
+    taskbar_icon_messages       = loadImage ('assets/messages.png');
+    taskbar_icon_sound0         = loadImage ('assets/sound0.png');
+    taskbar_icon_sound1         = loadImage ('assets/sound1.png');
+    taskbar_icon_sound2         = loadImage ('assets/sound2.png');
+    taskbar_icon_sound3         = loadImage ('assets/sound3.png');
 }
 
 //========================================================================
@@ -120,48 +101,88 @@ function setup ()
     createCanvas (windowWidth, windowHeight);
 
     // setup taskbar apps
-    create_window_button = new TaskBarButton (5, 5, "+1");
+    generic_window_button0 = new TaskBarApp (0, 0, {
+        app_icon_image:taskbar_icon_generic_window,
+        app_window:Window
+    });
+    generic_window_button1 = new TaskBarApp (0, 0, {
+        app_icon_image:taskbar_icon_messages,
+        app_window:Window,
+        name:"Messages"
+    });
+    generic_window_button2 = new TaskBarApp (0, 0, {
+        app_icon_image:taskbar_icon_calculator,
+        app_window:Window,
+        name:"Calculator"
+    });
+    generic_window_button3 = new TaskBarApp (0, 0, {
+        app_icon_image:taskbar_icon_file_explorer,
+        app_window:Window,
+        name:"File Explorer"
+    });
+    terminal_window_button = new TaskBarApp (0, 0, {
+        app_icon_image:taskbar_icon_terminal,
+        app_window:TerminalAppWindow,
+        name:"Terminal"
+    });
 
     // setup widgets
     date_time_widget = new TaskBarWidget_DateAndTime (0, 0, {
         is_custom_display:true,
+        name:"Date & Time"
     });
     battery_widget = new TaskBarWidget_Icon (0, 0, {
         icon_width:18,
         icon_height:18,
         icon_image_states:[
-            taskbar_battery_icon_full,
-            taskbar_battery_icon_75,
-            taskbar_battery_icon_50,
-            taskbar_battery_icon_25,
-            taskbar_battery_icon_0
+            taskbar_icon_battery_full,
+            taskbar_icon_battery_75,
+            taskbar_icon_battery_50,
+            taskbar_icon_battery_25,
+            taskbar_icon_battery_0
         ],
-        default_state:0
+        default_state:0,
+        name:"Battery"
+    });
+    sound_widget = new TaskBarWidget_Icon (0, 0, {
+        icon_width:25,
+        icon_height:25,
+        icon_image_states:[
+            taskbar_icon_sound0,
+            taskbar_icon_sound1,
+            taskbar_icon_sound2,
+            taskbar_icon_sound3
+        ],
+        default_state:0,
+        name:"Sound"
     });
     wifi_widget = new TaskBarWidget_Icon (0, 0, {
         icon_width:18,
         icon_height:18,
         icon_image_states:[
-            taskbar_wifi_icon_full,
-            taskbar_wifi_icon_empty
+            taskbar_icon_wifi_full,
+            taskbar_icon_wifi_empty
         ],
-        default_state:0
+        default_state:0,
+        name:"WiFi/Internet"
     });
     location_widget = new TaskBarWidget_Icon (0, 0, {
         icon_width:18,
         icon_height:18,
         icon_image_states:[
-            taskbar_location_icon
+            taskbar_icon_location
         ],
-        default_state:0
+        default_state:0,
+        name:"Location Tracking"
     });
     settings_widget = new TaskBarWidget_Icon (0, 0, {
         icon_width:18,
         icon_height:18,
         icon_image_states:[
-            taskbar_settings_icon
+            taskbar_icon_settings
         ],
-        default_state:0
+        default_state:0,
+        name:"Settings"
     });
 
 }
@@ -205,6 +226,7 @@ function draw_desktop ()
     let background_text_width = textWidth (background_text);
     let background_text_color = "white";
     fill (background_text_color);
+    noStroke ();
     text (background_text, x-background_text_width/2, y-background_text_height/2);
 
     // draw desktop icons
@@ -215,7 +237,10 @@ function draw_desktop ()
         let window = windows[wi];
         // mark window as focused if it is the last
         if (is_a_window_focused && wi+1 == windows.length)
+        {
+            // mark window as focused
             window.is_focused = true;
+        }
         // otherwise, it is not focused
         else
             window.is_focused = false;
@@ -232,33 +257,31 @@ function draw_desktop ()
     fill (taskbar_color);
     noStroke ();
     rect (x, y, taskbar_width, taskbar_height);
+
     // taskbar: apps
-    textSize (12);
-    fill ("white");
-    // text ("left", x, y+taskbar_height/2+6);
-    create_window_button.show (x+5, y+5);
-    // taskbar: time
-    let widget_curr_x = windowWidth;
-    fill ("white");
-    let time_padding_right = 20;
-    let time_text_height = 12;
-    textSize (time_text_height);
-    let hour_24 = hour ();
-    let hour_12 = (11 + hour_24) % 12 + 1;
-    let is_am = hour_24 < 12;
-    let padded_minute = ("0" + minute()).slice (-2);
-    let time_str = `${hour_12}:${padded_minute} ${is_am ? "AM" : "PM"}`;
-    let text_width = textWidth (time_str);
-    // taskbar: date
-    let date_str = `${month()}/${day()}/${year()}`;
-    textSize (time_text_height);
-    let date_text_width = textWidth (date_str);
-    widget_curr_x = widget_curr_x-date_text_width-time_padding_right;
-    date_time_widget.show (widget_curr_x, y+5, width=date_text_width+time_padding_right);
+    let current_taskbar_app_x = x+5;
+    generic_window_button0.show (current_taskbar_app_x, y+5);
+    current_taskbar_app_x = current_taskbar_app_x + generic_window_button0.width;
+    generic_window_button1.show (current_taskbar_app_x, y+5);
+    current_taskbar_app_x = current_taskbar_app_x + generic_window_button1.width;
+    generic_window_button2.show (current_taskbar_app_x, y+5);
+    current_taskbar_app_x = current_taskbar_app_x + generic_window_button2.width;
+    generic_window_button3.show (current_taskbar_app_x, y+5);
+    current_taskbar_app_x = current_taskbar_app_x + generic_window_button3.width;
+    terminal_window_button.show (current_taskbar_app_x, y+5);
+    current_taskbar_app_x = current_taskbar_app_x + terminal_window_button.width;
+
     // taskbar: widgets
+    let widget_curr_x = windowWidth;
+    // taskbar: widgets: date & time
+    widget_curr_x = widget_curr_x-date_time_widget.width;
+    date_time_widget.show (widget_curr_x, y+5);
     // taskbar: widgets: battery
-    widget_curr_x = windowWidth-date_text_width-time_padding_right-battery_widget.width;
+    widget_curr_x = widget_curr_x-battery_widget.width;
     battery_widget.show (widget_curr_x, y+5);
+    // taskbar: widgets: sound
+    widget_curr_x = widget_curr_x-sound_widget.width;
+    sound_widget.show (widget_curr_x, y+5);
     // taskbar: widgets: wifi
     widget_curr_x = widget_curr_x-wifi_widget.width;
     wifi_widget.show (widget_curr_x, y+5);
@@ -278,8 +301,51 @@ function draw_desktop ()
 //=== CONTROLS ===========================================================
 //========================================================================
 
+function minimize_window (window)
+{
+    // unfocus window
+    window.is_focused = false;
+    // move window to the start of the draw order list
+    windows.splice (wi, 1);
+    windows.unshift (window);
+    // edge case: if there is only one window
+    // then this window becomes focused again
+    if (windows.length == 1)
+    {
+        is_a_window_focused = false;
+    }
+}
+
 function mousePressed ()
 {
+    // we need a better system here to ensure all apps and widgets can be pressed
+    // taskbar apps
+    let was_pressed = generic_window_button0.pressed ();
+    if (was_pressed) return;
+    was_pressed = generic_window_button1.pressed ();
+    if (was_pressed) return;
+    was_pressed = generic_window_button2.pressed ();
+    if (was_pressed) return;
+    was_pressed = generic_window_button3.pressed ();
+    if (was_pressed) return;
+    was_pressed = terminal_window_button.pressed ();
+    if (was_pressed) return;
+
+    // taskbar widgets
+    was_pressed = date_time_widget.pressed ();
+    if (was_pressed) return;
+    was_pressed = battery_widget.pressed ();
+    if (was_pressed) return;
+    was_pressed = sound_widget.pressed ();
+    if (was_pressed) return;
+    was_pressed = wifi_widget.pressed ();
+    if (was_pressed) return;
+    if (is_location_being_requested)
+        was_pressed = location_widget.pressed ();
+    if (was_pressed) return;
+    was_pressed = settings_widget.pressed ();
+
+    // windows
     // assume no window is focused
     // and fix it if we pressed on a window
     is_a_window_focused = false;
@@ -292,9 +358,26 @@ function mousePressed ()
         // check for exit button
         if (window.is_mouse_over_exit_button ())
         {
+            // update taskbar app
+            windows[wi].taskbar_app.current_app_window = null;
             // delete window
             windows.splice (wi, 1);
-            break;
+            return;
+        }
+        if (window.is_mouse_over_minimize_button ())
+        {
+            // unfocus window
+            window.is_focused = false;
+            // move window to the start of the draw order list
+            windows.splice (wi, 1);
+            windows.unshift (window);
+            // edge case: if there is only one window
+            // then this window becomes focused again
+            if (windows.length == 1)
+            {
+                is_a_window_focused = false;
+            }
+            return;
         }
         // break so we only press one window at a time
         if (was_pressed)
@@ -307,36 +390,29 @@ function mousePressed ()
             break;
         }
     }
-
-    // we need a better system here to ensure all apps and widgets can be pressed
-    // apps
-    create_window_button.pressed ();
-
-    // widgets
-    date_time_widget.pressed ();
-    battery_widget.pressed ();
-    wifi_widget.pressed ();
-    if (is_location_being_requested)
-        location_widget.pressed ();
-    settings_widget.pressed ();
 }
 
 function mouseReleased ()
 {
+    // taskbar apps
+    generic_window_button0.released ();
+    generic_window_button1.released ();
+    generic_window_button2.released ();
+    generic_window_button3.released ();
+    terminal_window_button.released ();
+
+    // taskbar widgets
+    date_time_widget.released ();
+    battery_widget.released ();
+    sound_widget.released ();
+    wifi_widget.released ();
+    location_widget.released ();
+    settings_widget.released ();
+
     for (let window of windows)
     {
         window.released ();
     }
-
-    // apps
-    create_window_button.released ();
-
-    // widgets
-    date_time_widget.released ();
-    battery_widget.released ();
-    wifi_widget.released ();
-    location_widget.released ();
-    settings_widget.released ();
 }
 
 //========================================================================

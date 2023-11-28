@@ -112,7 +112,11 @@ we're going for impressive
 but also need a playable game
 - a bash like langauge but useable :P
 
+would the windows list be better as 
+- a focused list?
+- a minimized list?
 
+change all global vars to have g_ to denote global - just for cleanliness
 
 https://squaremyimage.com/
 - to convert rect to square icons

@@ -30,7 +30,7 @@ let working_line = [];
 // let cursor_i = 0;
 let working_line_cursor_j = 0;
 
-let font_size = 20;
+let font_size = 12;
 let padding_top = 10;
 let padding_right = 10;
 let letter_spacing_horizontal = 2;
@@ -283,117 +283,127 @@ function run_command (command)
 //=== TERMINAL VISUALS ===================================================
 //========================================================================
 
-function draw_terminal ()
+class TerminalAppWindow extends Window
 {
-
-    // calculate window character width
-    // so we know when to line wrap
-    // -1 so we have extra padding
-    let char_width = (font_size + letter_spacing_horizontal) / 2;
-    let char_per_row = Math.floor (windowWidth / char_width) - 1;
-
-    // print terminal contents to the screen
-    // print each string
-    // terminal can have many strings but newlines will tell us when to go to the next line
-    // also if we run out of horizontal space, we will break to a newline
-    let line_num = 0;
-    let col_num = 0;
-    for (let string of terminal_contents)
+    constructor (x, y)
     {
-        // print each char of the current string
-        for (let char of string)
-        {
-            // check for newlines
-            if (char === '\n')
-            {
-                line_num++;
-                col_num = 0;
-                continue;
-            }
+        super (x, y);
 
-            let x = col_num * ((font_size + letter_spacing_horizontal) / 2) + padding_right;
-            let y = line_num * (font_size + letter_spacing_vertical) + font_size + padding_top;
-
-            textFont (terminal_text_font);
-            textSize (font_size);
-            noStroke ();
-            fill (terminal_text_color);
-            text (char, x, y);
-            // stroke ("lime");
-            // fill ("lime");
-            // point (x, y);
-
-            // update next draw position
-            col_num++;
-            // ensure we wrap to a newline if needed
-            if (col_num >= char_per_row)
-            {
-                line_num++;
-                col_num = 0;
-            }
-
-        }
+        this.background_color = "#000000";
+        this.title = "Terminal";
+        
     }
 
-    // print current working line
-    // let working_local_i = 0;
-    let working_local_j = 0;
-    for (let string of working_line)
+    draw_window_content ()
     {
-        for (let char of string)
+        // calculate window character width
+        // so we know when to line wrap
+        // -1 so we have extra padding
+        let char_width = (font_size + letter_spacing_horizontal) / 2;
+        let char_per_row = Math.floor (this.width / char_width) - 1;
+
+        // print terminal contents to the screen
+        // print each string
+        // terminal can have many strings but newlines will tell us when to go to the next line
+        // also if we run out of horizontal space, we will break to a newline
+        let line_num = 0;
+        let col_num = 0;
+        for (let string of terminal_contents)
         {
-
-            let x = col_num * ((font_size + letter_spacing_horizontal) / 2) + padding_right;
-            let y = line_num * (font_size + letter_spacing_vertical) + font_size + padding_top;
-
-            // highlight cursor position
-            let is_cursor_position = working_local_j == working_line_cursor_j;
-            if (is_cursor_position)
+            // print each char of the current string
+            for (let char of string)
             {
+                // check for newlines
+                if (char === '\n')
+                {
+                    line_num++;
+                    col_num = 0;
+                    continue;
+                }
+
+                let x = this.x + col_num * ((font_size + letter_spacing_horizontal) / 2) + padding_right;
+                let y = this.y+this.header_height + line_num * (font_size + letter_spacing_vertical) + font_size + padding_top;
+
+                textFont (terminal_text_font);
+                textSize (font_size);
                 noStroke ();
                 fill (terminal_text_color);
-                rectMode ();
-                rect (x, y-font_size*0.85, font_size/2, font_size);
-            }
+                text (char, x, y);
+                // stroke ("lime");
+                // fill ("lime");
+                // point (x, y);
 
-            textFont (terminal_text_font);
-            textSize (font_size);
-            noStroke ();
-            if (is_cursor_position)
-                fill (background_color);
-            else
-                fill (terminal_text_color);
-            text (char, x, y);
-            stroke ("red");
-            fill ("red");
-            point (x, y);
+                // update next draw position
+                col_num++;
+                // ensure we wrap to a newline if needed
+                if (col_num >= char_per_row)
+                {
+                    line_num++;
+                    col_num = 0;
+                }
 
-            // update next draw position
-            col_num++;
-            working_local_j++;
-            // ensure we wrap to a newline if needed
-            if (col_num >= char_per_row)
-            {
-                line_num++;
-                col_num = 0;
-                // no need to wrap for working_local index
             }
         }
-    }
 
-    // draw cursor highlight if cursor is at the end of the working line
-    let is_cursor_position = working_local_j == working_line_cursor_j;
-    if (is_cursor_position)
-    {
-        noStroke ();
-        fill (terminal_text_color);
-        rectMode ();
-        let x = col_num * ((font_size + letter_spacing_horizontal) / 2) + padding_right;
-        let y = line_num * (font_size + letter_spacing_vertical) + font_size + padding_top;
-        rect (x, y-font_size*0.85, font_size/2, font_size);
+        // print current working line
+        // let working_local_i = 0;
+        let working_local_j = 0;
+        for (let string of working_line)
+        {
+            for (let char of string)
+            {
+
+                let x = this.x + col_num * ((font_size + letter_spacing_horizontal) / 2) + padding_right;
+                let y = this.y+this.header_height + line_num * (font_size + letter_spacing_vertical) + font_size + padding_top;
+
+                // highlight cursor position
+                let is_cursor_position = working_local_j == working_line_cursor_j;
+                if (is_cursor_position)
+                {
+                    noStroke ();
+                    fill (terminal_text_color);
+                    rectMode ();
+                    rect (x, y-font_size*0.85, font_size/2, font_size);
+                }
+
+                textFont (terminal_text_font);
+                textSize (font_size);
+                noStroke ();
+                if (is_cursor_position)
+                    fill (background_color);
+                else
+                    fill (terminal_text_color);
+                text (char, x, y);
+                stroke ("red");
+                fill ("red");
+                point (x, y);
+
+                // update next draw position
+                col_num++;
+                working_local_j++;
+                // ensure we wrap to a newline if needed
+                if (col_num >= char_per_row)
+                {
+                    line_num++;
+                    col_num = 0;
+                    // no need to wrap for working_local index
+                }
+            }
+        }
+
+        // draw cursor highlight if cursor is at the end of the working line
+        let is_cursor_position = working_local_j == working_line_cursor_j;
+        if (is_cursor_position)
+        {
+            noStroke ();
+            fill (terminal_text_color);
+            rectMode ();
+            let x = this.x + col_num * ((font_size + letter_spacing_horizontal) / 2) + padding_right;
+            let y = this.y+this.header_height + line_num * (font_size + letter_spacing_vertical) + font_size + padding_top;
+            rect (x, y-font_size*0.85, font_size/2, font_size);
+        }
     }
 }
-
 
 
 

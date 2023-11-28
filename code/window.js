@@ -30,10 +30,15 @@ class Window
         this.minimum_width = 300;
         this.minimum_height = 100;
 
+        this.taskbar_app = null;
+
         // header
         // exit
         // maximize
         // minimize
+        this.is_minimized = false;
+
+        this.background_color = "#fff";
 
     }
 
@@ -180,6 +185,9 @@ class Window
 
     pressed ()
     {
+        // ensure window is not minimized
+        if (this.is_minimized)
+            return;
         let was_pressed_on = false;
         // focus window if we clicked anywhere on window
         if (this.is_mouse_over ())
@@ -220,6 +228,15 @@ class Window
             was_pressed_on = true;
         }
 
+        if (this.is_mouse_over_minimize_button ())
+        {
+            // set to minimized so we dont draw window
+            this.is_minimized = true;
+            // unfocus window
+            // handled by caller
+            was_pressed_on = true;
+        }
+
         return was_pressed_on;
     }
 
@@ -231,8 +248,10 @@ class Window
 
     show ()
     {
+        // ensure window is not minimized
+        if (this.is_minimized)
+            return;
         // draw window background
-        let window_background_color = "#eee";
         if (this.is_focused)
         {
             stroke ("#00BCFF");
@@ -243,7 +262,7 @@ class Window
             stroke ("black");
             strokeWeight (1);
         }
-        fill (window_background_color);
+        fill (this.background_color);
         rect (this.x, this.y, this.width, this.height);
         // draw window header
         stroke (0);
@@ -355,6 +374,18 @@ class Window
         fill ("white");
         text (minimize_button_text, this.x+this.width-exit_button_width-header_button_padding-maximize_button_width-header_button_padding*2-minimize_button_width-header_button_padding*2, this.y+this.header_height/2+minimize_button_height/3);
 
+        // print window contents
+        this.draw_window_content ();
+    }
+
+    // prints the main content of the window
+    // should be overloaded
+    draw_window_content ()
+    {
+        fill ("black");
+        stroke (0);
+        strokeWeight (0);
+        text ("generic content", this.x+this.width/2, this.y+this.height/2);
     }
 }
 
