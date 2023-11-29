@@ -245,6 +245,17 @@ class Window
         this.is_dragging = false;
         this.is_resizing = false;
     }
+    
+    doubleClicked ()
+    {
+        let was_double_clicked = false;
+        if (this.is_mouse_over ())
+        {
+            was_double_clicked = true;
+            console.log ("window doubleclick");
+        }
+        return was_double_clicked;
+    }
 
     show ()
     {

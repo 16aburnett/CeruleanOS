@@ -56,6 +56,17 @@ class TaskBarWidget
         this.is_being_pressed = false;
     }
 
+    doubleClicked ()
+    {
+        let was_double_clicked = false;
+        if (this.is_mouse_over ())
+        {
+            was_double_clicked = true;
+            console.log ("widget doubleclick");
+        }
+        return was_double_clicked;
+    }
+
     show (x, y, width=-1, height=-1)
     {
         // update x,y position

@@ -12,10 +12,6 @@ let windows = [];
 
 let is_a_window_focused = true;
 
-let is_wifi_on = true;
-
-//========================================================================
-
 let generic_window_button0;
 let generic_window_button1;
 let generic_window_button2;
@@ -42,6 +38,8 @@ let taskbar_icon_sound0;
 let taskbar_icon_sound1;
 let taskbar_icon_sound2;
 let taskbar_icon_sound3;
+let icon_trash_bin;
+let icon_file;
 
 // Date and time
 let date_time_widget;
@@ -69,6 +67,23 @@ let settings_widget;
 let taskbar_apps = [];
 let taskbar_widgets = [];
 
+let desktop_apps = [];
+
+let desktop_app_trash;
+let desktop_app_generic;
+let desktop_app_messages;
+let desktop_app_calculator;
+let desktop_app_file_explorer;
+let desktop_app_terminal;
+let desktop_app_folder0;
+let desktop_app_folder1;
+let desktop_app_folder2;
+let desktop_app_file0;
+let desktop_app_file1;
+let desktop_app_file2;
+let desktop_app_file3;
+let desktop_app_file4;
+
 //========================================================================
 
 // preload all images before drawing canvas
@@ -92,6 +107,8 @@ function preload ()
     taskbar_icon_sound1         = loadImage ('assets/sound1.png');
     taskbar_icon_sound2         = loadImage ('assets/sound2.png');
     taskbar_icon_sound3         = loadImage ('assets/sound3.png');
+    icon_trash_bin              = loadImage ('assets/trash_bin.png');
+    icon_file                   = loadImage ('assets/file.png');
 }
 
 //========================================================================
@@ -125,6 +142,111 @@ function setup ()
         app_window:TerminalAppWindow,
         name:"Terminal"
     });
+
+    // setup desktop apps
+    desktop_app_trash = new DesktopApp (0, 0, {
+        app_icon_image: icon_trash_bin,
+        app_window:Window,
+        name:"Trash Bin"
+    });
+    desktop_apps.push (desktop_app_trash);
+    desktop_app_generic = new DesktopApp (0, 0, {
+        app_icon_image: taskbar_icon_generic_window,
+        app_window:Window,
+        name:"Generic Desktop App"
+    });
+    desktop_apps.push (desktop_app_generic);
+    desktop_app_messages = new DesktopApp (0, 0, {
+        app_icon_image: taskbar_icon_messages,
+        app_window:Window,
+        name:"Messages"
+    });
+    desktop_apps.push (desktop_app_messages);
+    desktop_app_calculator = new DesktopApp (0, 0, {
+        app_icon_image: taskbar_icon_calculator,
+        app_window:Window,
+        name:"Calculator"
+    });
+    desktop_apps.push (desktop_app_calculator);
+    desktop_app_file_explorer = new DesktopApp (0, 0, {
+        app_icon_image: taskbar_icon_file_explorer,
+        app_window:Window,
+        name:"File Explorer"
+    });
+    desktop_apps.push (desktop_app_file_explorer);
+    desktop_app_terminal = new DesktopApp (0, 0, {
+        app_icon_image: taskbar_icon_terminal,
+        app_window:TerminalAppWindow,
+        name:"Terminal"
+    });
+    desktop_apps.push (desktop_app_terminal);
+    desktop_app_folder0 = new DesktopApp (0, 0, {
+        app_icon_image: taskbar_icon_file_explorer,
+        app_window:Window,
+        name:"Folder 0"
+    });
+    desktop_apps.push (desktop_app_folder0);
+    desktop_app_folder1 = new DesktopApp (0, 0, {
+        app_icon_image: taskbar_icon_file_explorer,
+        app_window:Window,
+        name:"Folder 1"
+    });
+    desktop_apps.push (desktop_app_folder1);
+    desktop_app_folder2 = new DesktopApp (0, 0, {
+        app_icon_image: taskbar_icon_file_explorer,
+        app_window:Window,
+        name:"Folder 2"
+    });
+    desktop_apps.push (desktop_app_folder2);
+    desktop_app_file0 = new DesktopApp (0, 0, {
+        app_icon_image: icon_file,
+        app_window:Window,
+        name:"File 0"
+    });
+    desktop_apps.push (desktop_app_file0);
+    desktop_app_file1 = new DesktopApp (0, 0, {
+        app_icon_image: icon_file,
+        app_window:Window,
+        name:"File 1"
+    });
+    desktop_apps.push (desktop_app_file1);
+    desktop_app_file2 = new DesktopApp (0, 0, {
+        app_icon_image: icon_file,
+        app_window:Window,
+        name:"File 2"
+    });
+    desktop_apps.push (desktop_app_file2);
+    desktop_app_file3 = new DesktopApp (0, 0, {
+        app_icon_image: icon_file,
+        app_window:Window,
+        name:"File 3"
+    });
+    desktop_apps.push (desktop_app_file3);
+    desktop_app_file4 = new DesktopApp (0, 0, {
+        app_icon_image: icon_file,
+        app_window:Window,
+        name:"File 4"
+    });
+    desktop_apps.push (desktop_app_file4);
+    // align all desktop apps into non-overlapping rows/cols
+    let desktop_app_padding = 4;
+    let current_desktop_app_x = desktop_app_padding;
+    let current_desktop_app_y = desktop_app_padding;
+    for (let desktop_app of desktop_apps)
+    {
+        desktop_app.x = current_desktop_app_x;
+        desktop_app.y = current_desktop_app_y;
+        // go to next icon position below the current
+        current_desktop_app_y += desktop_app.height + desktop_app_padding;
+        // go to next column if we passed the taskbar
+        if (current_desktop_app_y + desktop_app.height + desktop_app_padding >= (windowHeight-taskbar_height))
+        {
+            // increment column
+            current_desktop_app_x += desktop_app.width + desktop_app_padding;
+            current_desktop_app_y = desktop_app_padding;
+        }
+
+    }
 
     // setup widgets
     date_time_widget = new TaskBarWidget_DateAndTime (0, 0, {
@@ -230,6 +352,13 @@ function draw_desktop ()
     text (background_text, x-background_text_width/2, y-background_text_height/2);
 
     // draw desktop icons
+    // draw in reverse order
+    for (let desktop_app_i = desktop_apps.length-1; desktop_app_i >= 0; --desktop_app_i)
+    {
+        let desktop_app = desktop_apps[desktop_app_i];
+        desktop_app.update ();
+        desktop_app.show (desktop_app.x, desktop_app.y);
+    }
 
     // draw windows
     for (let wi = 0; wi < windows.length; ++wi)
@@ -344,6 +473,7 @@ function mousePressed ()
         was_pressed = location_widget.pressed ();
     if (was_pressed) return;
     was_pressed = settings_widget.pressed ();
+    if (was_pressed) return;
 
     // windows
     // assume no window is focused
@@ -354,18 +484,21 @@ function mousePressed ()
     for (let wi = windows.length-1; wi >= 0; --wi)
     {
         let window = windows[wi];
-        let was_pressed = window.pressed ();
+        was_pressed = window.pressed ();
         // check for exit button
         if (window.is_mouse_over_exit_button ())
         {
-            // update taskbar app
-            windows[wi].taskbar_app.current_app_window = null;
+            was_pressed = true;
+            // update taskbar app (if there was one)
+            if (windows[wi].taskbar_app)
+                windows[wi].taskbar_app.current_app_window = null;
             // delete window
             windows.splice (wi, 1);
             return;
         }
         if (window.is_mouse_over_minimize_button ())
         {
+            was_pressed = true;
             // unfocus window
             window.is_focused = false;
             // move window to the start of the draw order list
@@ -390,6 +523,15 @@ function mousePressed ()
             break;
         }
     }
+    if (was_pressed) return;
+    
+    // desktop apps
+    // this comes after windows because windows go infront of the desktop
+    for (let desktop_app of desktop_apps)
+    {
+        was_pressed = desktop_app.pressed ();
+        if (was_pressed) return;
+    }
 }
 
 function mouseReleased ()
@@ -400,6 +542,12 @@ function mouseReleased ()
     generic_window_button2.released ();
     generic_window_button3.released ();
     terminal_window_button.released ();
+
+    // desktop apps
+    for (let desktop_app of desktop_apps)
+    {
+        desktop_app.released ();
+    }
 
     // taskbar widgets
     date_time_widget.released ();
@@ -413,6 +561,96 @@ function mouseReleased ()
     {
         window.released ();
     }
+}
+
+function doubleClicked ()
+{
+    // we need a better system here to ensure all apps and widgets can be pressed
+    // taskbar apps
+    let was_pressed = generic_window_button0.doubleClicked ();
+    if (was_pressed) return;
+    was_pressed = generic_window_button1.doubleClicked ();
+    if (was_pressed) return;
+    was_pressed = generic_window_button2.doubleClicked ();
+    if (was_pressed) return;
+    was_pressed = generic_window_button3.doubleClicked ();
+    if (was_pressed) return;
+    was_pressed = terminal_window_button.doubleClicked ();
+    if (was_pressed) return;
+
+    // taskbar widgets
+    was_pressed = date_time_widget.doubleClicked ();
+    if (was_pressed) return;
+    was_pressed = battery_widget.doubleClicked ();
+    if (was_pressed) return;
+    was_pressed = sound_widget.doubleClicked ();
+    if (was_pressed) return;
+    was_pressed = wifi_widget.doubleClicked ();
+    if (was_pressed) return;
+    if (is_location_being_requested)
+        was_pressed = location_widget.doubleClicked ();
+    if (was_pressed) return;
+    was_pressed = settings_widget.doubleClicked ();
+    if (was_pressed) return;
+
+    // windows
+    // assume no window is focused
+    // and fix it if we pressed on a window
+    is_a_window_focused = false;
+    // mouse press in reverse draw order
+    // so we press windows in the front before back
+    for (let wi = windows.length-1; wi >= 0; --wi)
+    {
+        let window = windows[wi];
+        was_pressed = window.doubleClicked ();
+        // check for exit button
+        if (window.is_mouse_over_exit_button ())
+        {
+            was_pressed = true;
+            // update taskbar app (if there was one)
+            if (windows[wi].taskbar_app)
+                windows[wi].taskbar_app.current_app_window = null;
+            // delete window
+            windows.splice (wi, 1);
+            return;
+        }
+        if (window.is_mouse_over_minimize_button ())
+        {
+            was_pressed = true;
+            // unfocus window
+            window.is_focused = false;
+            // move window to the start of the draw order list
+            windows.splice (wi, 1);
+            windows.unshift (window);
+            // edge case: if there is only one window
+            // then this window becomes focused again
+            if (windows.length == 1)
+            {
+                is_a_window_focused = false;
+            }
+            return;
+        }
+        // break so we only press one window at a time
+        if (was_pressed)
+        {
+            // we clicked this window,
+            // so let's focus it and bring it to the front of the draw order
+            windows.splice (wi, 1);
+            windows.push (window);
+            is_a_window_focused = true;
+            break;
+        }
+    }
+    if (was_pressed) return;
+    
+    // desktop apps
+    // this comes after windows because windows go infront of the desktop
+    for (let desktop_app of desktop_apps)
+    {
+        was_pressed = desktop_app.doubleClicked ();
+        if (was_pressed) return;
+    }
+
 }
 
 //========================================================================
