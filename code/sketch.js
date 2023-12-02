@@ -40,6 +40,7 @@ let taskbar_icon_sound2;
 let taskbar_icon_sound3;
 let icon_trash_bin;
 let icon_file;
+let icon_backspace;
 
 // Date and time
 let date_time_widget;
@@ -109,6 +110,7 @@ function preload ()
     taskbar_icon_sound3         = loadImage ('assets/sound3.png');
     icon_trash_bin              = loadImage ('assets/trash_bin.png');
     icon_file                   = loadImage ('assets/file.png');
+    icon_backspace              = loadImage ('assets/backspace.png');
 }
 
 //========================================================================
@@ -129,7 +131,7 @@ function setup ()
     });
     generic_window_button2 = new TaskBarApp (0, 0, {
         app_icon_image:taskbar_icon_calculator,
-        app_window:Window,
+        app_window:CalculatorAppWindow,
         name:"Calculator"
     });
     generic_window_button3 = new TaskBarApp (0, 0, {
@@ -164,7 +166,7 @@ function setup ()
     desktop_apps.push (desktop_app_messages);
     desktop_app_calculator = new DesktopApp (0, 0, {
         app_icon_image: taskbar_icon_calculator,
-        app_window:Window,
+        app_window:CalculatorAppWindow,
         name:"Calculator"
     });
     desktop_apps.push (desktop_app_calculator);

@@ -23,6 +23,7 @@ class Window
         this.header_color = "#222";
 
         this.title = "Generic Window";
+        this.icon = taskbar_icon_generic_window;
 
         // resizing
         this.is_resizing = false;
@@ -38,7 +39,18 @@ class Window
         // minimize
         this.is_minimized = false;
 
+        // window content
         this.background_color = "#fff";
+        // list of user elements that could be clicked on
+        // base window class will handle calling pressed, released, doubleClicked etc
+        // Window users just need to add their clickable window elements to this array
+        this.clickables = [];
+
+        // even though pressing on a window generally does nothing,
+        // this exists to keep track of if something on this window was pressed
+        // if something was pressed on this window,
+        // we need to know to process mouse buttons being released
+        this.is_being_pressed = false;
 
     }
 
@@ -187,7 +199,14 @@ class Window
     {
         // ensure window is not minimized
         if (this.is_minimized)
-            return;
+            return false;
+        // ignore press if it wasnt over the window
+        if (!this.is_mouse_over ())
+            return false;
+        // keep track that we pressed on this window
+        this.is_being_pressed = true;
+
+        
         let was_pressed_on = false;
         // focus window if we clicked anywhere on window
         if (this.is_mouse_over ())
@@ -237,24 +256,46 @@ class Window
             was_pressed_on = true;
         }
 
+        // process clickables
+        for (let clickable of this.clickables)
+        {
+            clickable.pressed (this.x, this.y);
+        }
+
         return was_pressed_on;
     }
 
     released ()
     {
+        // process clickables if we pressed something on this window
+        if (this.is_being_pressed)
+        {
+            for (let clickable of this.clickables)
+            {
+                clickable.released (this.x, this.y);
+            }
+        }
         this.is_dragging = false;
         this.is_resizing = false;
+        this.is_being_pressed = false;
     }
     
     doubleClicked ()
     {
-        let was_double_clicked = false;
-        if (this.is_mouse_over ())
+        // ensure window is not minimized
+        if (this.is_minimized)
+            return false;
+        // ensure mouse was over window when doubleclicked
+        if (!this.is_mouse_over ())
+            return false;
+        // reaches here if this window was doubleclicked
+        console.log ("window doubleclick");
+        // check if window's clickables were doubleclicked
+        for (let clickable of this.clickables)
         {
-            was_double_clicked = true;
-            console.log ("window doubleclick");
+            clickable.doubleClicked (this.x, this.y);
         }
-        return was_double_clicked;
+        return true;
     }
 
     show ()
@@ -275,14 +316,17 @@ class Window
         }
         fill (this.background_color);
         rect (this.x, this.y, this.width, this.height);
+
         // draw window header
-        stroke (0);
-        strokeWeight (1);
+        noStroke ();
         if (this.is_focused)
             fill (this.header_color);
         else
             fill ("#333");
         rect (this.x, this.y, this.width, this.header_height);
+        // draw header icon
+        let header_icon_width = 16;
+        image (this.icon, this.x+6, this.y+this.header_height/2-header_icon_width/2, header_icon_width, header_icon_width);
         // draw header text
         textFont ("Arial");
         let header_text_height = 12;
@@ -292,7 +336,10 @@ class Window
             fill ("white");
         else
             fill ("#ccc");
-        text (this.title, this.x+header_text_height/2, this.y+header_text_height*1.5);
+        push ();
+        textAlign (LEFT, CENTER);
+        text (this.title, this.x+6+header_icon_width+6, this.y+this.header_height/2);
+        pop ();
 
         // draw resize box
         if (this.is_mouse_over() || this.is_resizing) {
@@ -339,6 +386,7 @@ class Window
         // only show hover color if mouse is over X
         if (exit_button_xlow < mouseX && mouseX < exit_button_xhigh && exit_button_ylow < mouseY && mouseY < exit_button_yhigh)
         {
+            noStroke ();
             fill ("red");
             rect (this.x+this.width-exit_button_width-header_button_padding*2, this.y, exit_button_width+header_button_padding*2, this.header_height);
             cursor (HAND);
@@ -358,6 +406,7 @@ class Window
         // only show hover color if mouse is over X
         if (xlow < mouseX && mouseX < xhigh && ylow < mouseY && mouseY < yhigh)
         {
+            noStroke ();
             fill ("#555");
             rect (this.x+this.width-exit_button_width-header_button_padding-maximize_button_width-header_button_padding*2-header_button_padding, this.y, maximize_button_width+header_button_padding*2, this.header_height);
             cursor (HAND);
@@ -377,6 +426,7 @@ class Window
         // only show hover color if mouse is over X
         if (xlow < mouseX && mouseX < xhigh && ylow < mouseY && mouseY < yhigh)
         {
+            noStroke ();
             fill ("#555");
             rect (this.x+this.width-exit_button_width-header_button_padding-maximize_button_width-header_button_padding*2-minimize_button_width-header_button_padding*2-header_button_padding, this.y, minimize_button_width+header_button_padding*2, this.header_height);
             cursor (HAND);

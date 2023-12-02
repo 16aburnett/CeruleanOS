@@ -154,11 +154,11 @@ class DesktopApp
         textSize (text_size);
         textFont ("Arial");
         textWrap (WORD);
-        textAlign(CENTER);
+        textAlign(CENTER, TOP);
         let wrap_width = this.width;
         text (this.name, this.x, this.y+5+this.icon_height+5, wrap_width);
         // this is kinda dumb but just reset to default text alignment
         // - so i dont have to set it everytime i draw text
-        textAlign(LEFT);
+        textAlign(LEFT, BOTTOM);
     }
 }
