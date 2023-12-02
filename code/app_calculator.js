@@ -1,5 +1,5 @@
 // GameVM
-// Calculator app
+// Simple calculator app
 // Author: Amy Burnett
 //========================================================================
 // Globals
@@ -15,124 +15,6 @@ const UNICODE_ELLIPSES = '\u2026';
 
 //========================================================================
 
-// App window element
-// a clickable button
-// when the button is pressed, it calls the onclick function provided
-class WindowButton
-{
-    constructor (x, y, label, onclick, window_instance, {width=50, height=25, border_radius=10, border_color="#000", noStroke=false, label_text_size=25, background_color="#fff", label_color="#000", mouse_over_background_color="#ccc", icon=null}={})
-    {
-        // button's position is relative to the app window's position
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.border_radius = border_radius;
-        this.border_color = border_color;
-        this.noStroke = noStroke;
-        this.background_color = background_color;
-        this.mouse_over_background_color = mouse_over_background_color;
-        this.label = label;
-        this.label_text_size = label_text_size;
-        this.label_color = label_color;
-        this.icon = icon;
-
-        // controls
-        this.is_being_pressed = false;
-
-        this.onclick_function = onclick;
-
-        this.window_instance = window_instance;
-    }
-
-    is_mouse_over (window_x, window_y)
-    {
-        let xlow  = this.x + window_x;
-        let xhigh = xlow + this.width;
-        let ylow  = this.y + window_y;
-        let yhigh = ylow + this.height;
-        return xlow < mouseX && mouseX < xhigh && ylow < mouseY && mouseY < yhigh;
-    }
-
-    pressed (window_x, window_y)
-    {
-        if (this.is_mouse_over (window_x, window_y))
-        {
-            this.is_being_pressed = true;
-            return true;
-        }
-        return false;
-    }
-
-    released (window_x, window_y)
-    {
-        // if we pressed and released while the mouse was over the button,,
-        // then submit the button press
-        if (this.is_being_pressed && this.is_mouse_over (window_x, window_y))
-        {
-            // console.log ("button pressed!");
-            this.onclick_function ();
-        }
-        // mouse was released so we cannot be still pressing this button
-        this.is_being_pressed = false;
-    }
-
-    doubleClicked (window_x, window_y)
-    {
-        // do nothing
-    }
-
-    show (window_x, window_y)
-    {
-        push ();
-
-        let x = this.x + window_x;
-        let y = this.y + window_y;
-
-        // draw button
-        if (this.is_mouse_over (window_x, window_y))
-        {
-            fill (this.mouse_over_background_color);
-            cursor (HAND);
-        }
-        else
-        {
-            fill (this.background_color);
-        }
-        if (this.noStroke)
-            noStroke ();
-        else
-        {
-            strokeWeight (1);
-            stroke (this.border_color);
-        }
-        rect (x, y, this.width, this.height, this.border_radius);
-
-        // draw button's label
-        // text label
-        if (this.icon == null)
-        {
-            fill (this.label_color);
-            noStroke ();
-            textFont ("Arial");
-            textStyle (BOLD);
-            textSize (this.label_text_size);
-            textAlign (CENTER, CENTER);
-            text (this.label, x+this.width/2, y+this.height/2);
-        }
-        else
-        {
-            image (this.icon, x+this.width/2-this.label_text_size/2, y+this.height/2-this.label_text_size/2, this.label_text_size, this.label_text_size);
-        }
-
-        pop ();
-    }
-}
-
-//========================================================================
-//=== VISUALS ============================================================
-//========================================================================
-
 class CalculatorAppWindow extends Window
 {
     constructor (x, y)
@@ -146,6 +28,9 @@ class CalculatorAppWindow extends Window
         this.height = 460;
         this.minimum_width = this.width;
         this.minimum_height = this.height;
+        // move window to center of screen
+        this.x = windowWidth/2-this.width/2;
+        this.y = windowHeight/2-this.height/2;
         
         // buttons
         let window_padding = 10;
@@ -154,8 +39,8 @@ class CalculatorAppWindow extends Window
         let cell_width = (this.width-2*window_padding-(num_buttons_wide-1)*cell_padding) / num_buttons_wide;
         let cell_height = cell_width;
 
-        let button_panel_x = this.x + window_padding;
-        let button_panel_y = this.y + this.header_height + window_padding + 60 + cell_padding;
+        let button_panel_x = window_padding;
+        let button_panel_y = this.header_height + window_padding + 60 + cell_padding;
 
         // row 0
         this.button_clear  = new WindowButton (button_panel_x + 0*(cell_width+cell_padding), button_panel_y + 0*(cell_height+cell_padding), "C", function() {this.window_instance.clear ()}, this, {width:cell_width, height:cell_height, background_color:"#777", mouse_over_background_color:"#bbb", noStroke:true, label_color:"#fff"});
@@ -209,7 +94,7 @@ class CalculatorAppWindow extends Window
 
     }
 
-    // CALCULATOR MECHANICS
+    // === CALCULATOR MECHANICS ==========================================
 
     does_last_word_have_decimal_point ()
     {
@@ -224,6 +109,8 @@ class CalculatorAppWindow extends Window
         }
         return false;
     }
+
+    //====================================================================
 
     // inserts digit to the working input
     insert_digit (digit)
@@ -245,6 +132,8 @@ class CalculatorAppWindow extends Window
     insert_8 () {this.insert_digit (8)}
     insert_9 () {this.insert_digit (9)}
 
+    //====================================================================
+
     delete_digit ()
     {
         this.current_input_str = this.current_input_str.slice (0, -1);
@@ -252,6 +141,8 @@ class CalculatorAppWindow extends Window
         if (this.current_input_str.length == 0 || this.current_input_str == '-')
             this.current_input_str = "0";
     }
+
+    //====================================================================
 
     insert_decimal_point ()
     {
@@ -262,6 +153,8 @@ class CalculatorAppWindow extends Window
         this.current_input_str += ".";
     }
 
+    //====================================================================
+
     clear ()
     {
         // if already cleared, clear history
@@ -269,6 +162,8 @@ class CalculatorAppWindow extends Window
             this.history = [];
         this.current_input_str = "0";
     }
+
+    //====================================================================
 
     // 0  -> (    is reset pos
     // (  -> ((   next to lparen
@@ -289,6 +184,8 @@ class CalculatorAppWindow extends Window
         // otherwise, do nothing
     }
 
+    //====================================================================
+
     rparen ()
     {
         // ensure that we need an rparen
@@ -307,6 +204,8 @@ class CalculatorAppWindow extends Window
         this.current_input_str += ")";
     }
 
+    //====================================================================
+
     div ()
     {
         // ensure last char wasnt an op
@@ -314,6 +213,8 @@ class CalculatorAppWindow extends Window
             return;
         this.current_input_str += '/';
     }
+
+    //====================================================================
 
     mul ()
     {
@@ -323,6 +224,8 @@ class CalculatorAppWindow extends Window
         this.current_input_str += '*';
     }
 
+    //====================================================================
+
     sub ()
     {
         // ensure last char wasnt an op
@@ -331,6 +234,8 @@ class CalculatorAppWindow extends Window
         this.current_input_str += '-';
     }
 
+    //====================================================================
+
     add ()
     {
         // ensure last char wasnt an op
@@ -338,6 +243,8 @@ class CalculatorAppWindow extends Window
             return;
         this.current_input_str += '+';
     }
+
+    //====================================================================
 
     equal ()
     {

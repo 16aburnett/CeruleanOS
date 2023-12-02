@@ -136,7 +136,7 @@ function setup ()
     });
     generic_window_button3 = new TaskBarApp (0, 0, {
         app_icon_image:taskbar_icon_file_explorer,
-        app_window:Window,
+        app_window:FileExplorerAppWindow,
         name:"File Explorer"
     });
     terminal_window_button = new TaskBarApp (0, 0, {
@@ -172,9 +172,13 @@ function setup ()
     desktop_apps.push (desktop_app_calculator);
     desktop_app_file_explorer = new DesktopApp (0, 0, {
         app_icon_image: taskbar_icon_file_explorer,
-        app_window:Window,
+        app_window:FileExplorerAppWindow,
         name:"File Explorer"
     });
+    
+    // **TEMP**
+    windows.push (new FileExplorerAppWindow (0, 0));
+
     desktop_apps.push (desktop_app_file_explorer);
     desktop_app_terminal = new DesktopApp (0, 0, {
         app_icon_image: taskbar_icon_terminal,
@@ -374,7 +378,8 @@ function draw_desktop ()
         }
         // otherwise, it is not focused
         else
-            window.is_focused = false;
+            // window.is_focused = false;
+            window.unfocus ();
         window.update ();
         window.show ();
     }
@@ -435,7 +440,8 @@ function draw_desktop ()
 function minimize_window (window)
 {
     // unfocus window
-    window.is_focused = false;
+    // window.is_focused = false;
+    window.unfocus ();
     // move window to the start of the draw order list
     windows.splice (wi, 1);
     windows.unshift (window);
@@ -502,7 +508,8 @@ function mousePressed ()
         {
             was_pressed = true;
             // unfocus window
-            window.is_focused = false;
+            // window.is_focused = false;
+            window.unfocus ();
             // move window to the start of the draw order list
             windows.splice (wi, 1);
             windows.unshift (window);
@@ -656,3 +663,15 @@ function doubleClicked ()
 }
 
 //========================================================================
+
+function keyPressed ()
+{
+    // handle OS keypress
+
+
+    // pass along keypress to each window
+    for (let window of windows)
+    {
+        window.keyPressed ();
+    }
+}

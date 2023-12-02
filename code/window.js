@@ -195,6 +195,17 @@ class Window
         }
     }
 
+    // unfocus should handle unfocusing the window and any focus-able elements
+    unfocus ()
+    {
+        for (let clickable of this.clickables)
+        {
+            // *this should really be clickable.unfocus, but this should work
+            clickable.pressed ();
+        }
+        this.is_focused = false;
+    }
+
     pressed ()
     {
         // ensure window is not minimized
@@ -296,6 +307,23 @@ class Window
             clickable.doubleClicked (this.x, this.y);
         }
         return true;
+    }
+
+    keyPressed ()
+    {
+        // ignore keyPress if window is not focused
+        if (!this.is_focused)
+            return;
+
+        // handle window keypresses
+        // ** this is where we can handle Ctrl+W for closing window
+        // ** and tab (and shift+tab) iterating over interactables
+
+        // send keypress to interactable elements
+        for (let interactable of this.clickables)
+        {
+            interactable.keyPressed ();
+        }
     }
 
     show ()
@@ -443,11 +471,472 @@ class Window
     // should be overloaded
     draw_window_content ()
     {
+        push ();
+
         fill ("black");
         stroke (0);
         strokeWeight (0);
+        textAlign (CENTER);
         text ("generic content", this.x+this.width/2, this.y+this.height/2);
+
+        pop ();
     }
 }
 
+// === WINDOW ELEMENTS ===================================================
 
+// App window element
+// a clickable button
+// when the button is pressed, it calls the onclick function provided
+class WindowButton
+{
+    constructor (x, y, label, onclick, window_instance, {width=50, height=25, border_radius=10, border_color="#000", noStroke=false, label_text_size=25, background_color="#fff", label_color="#000", mouse_over_background_color="#ccc", icon=null}={})
+    {
+        // button's position is relative to the app window's position
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.border_radius = border_radius;
+        this.border_color = border_color;
+        this.noStroke = noStroke;
+        this.background_color = background_color;
+        this.mouse_over_background_color = mouse_over_background_color;
+        this.label = label;
+        this.label_text_size = label_text_size;
+        this.label_color = label_color;
+        this.icon = icon;
+
+        // controls
+        this.is_being_pressed = false;
+
+        this.onclick_function = onclick;
+
+        this.window_instance = window_instance;
+    }
+
+    is_mouse_over (window_x, window_y)
+    {
+        let xlow  = this.x + window_x;
+        let xhigh = xlow + this.width;
+        let ylow  = this.y + window_y;
+        let yhigh = ylow + this.height;
+        return xlow < mouseX && mouseX < xhigh && ylow < mouseY && mouseY < yhigh;
+    }
+
+    pressed (window_x, window_y)
+    {
+        if (this.is_mouse_over (window_x, window_y))
+        {
+            this.is_being_pressed = true;
+            return true;
+        }
+        return false;
+    }
+
+    released (window_x, window_y)
+    {
+        // if we pressed and released while the mouse was over the button,,
+        // then submit the button press
+        if (this.is_being_pressed && this.is_mouse_over (window_x, window_y))
+        {
+            // console.log ("button pressed!");
+            this.onclick_function ();
+        }
+        // mouse was released so we cannot be still pressing this button
+        this.is_being_pressed = false;
+    }
+
+    doubleClicked (window_x, window_y)
+    {
+        // do nothing
+    }
+
+    keyPressed ()
+    {
+        // ignore if not focused
+        if (!this.is_focused)
+            return;
+        // TODO - SPACEBAR should press button
+    }
+
+    show (window_x, window_y)
+    {
+        push ();
+
+        let x = this.x + window_x;
+        let y = this.y + window_y;
+
+        // draw button
+        if (this.is_mouse_over (window_x, window_y))
+        {
+            fill (this.mouse_over_background_color);
+            cursor (HAND);
+        }
+        else
+        {
+            fill (this.background_color);
+        }
+        if (this.noStroke)
+            noStroke ();
+        else
+        {
+            strokeWeight (1);
+            stroke (this.border_color);
+        }
+        rect (x, y, this.width, this.height, this.border_radius);
+
+        // draw button's label
+        // text label
+        if (this.icon == null)
+        {
+            fill (this.label_color);
+            noStroke ();
+            textFont ("Arial");
+            textStyle (BOLD);
+            textSize (this.label_text_size);
+            textAlign (CENTER, CENTER);
+            text (this.label, x+this.width/2, y+this.height/2);
+        }
+        else
+        {
+            image (this.icon, x+this.width/2-this.label_text_size/2, y+this.height/2-this.label_text_size/2, this.label_text_size, this.label_text_size);
+        }
+
+        pop ();
+    }
+}
+
+//========================================================================
+
+// App window element
+// an editable textbox
+class WindowTextBox
+{
+    constructor (x, y, initial_text, submit_callback, window_instance, {width=50, height=25, border_radius=10, border_color="#000", noStroke=false, text_size=25, background_color="#fff", text_color="#000", text_font="Arial", is_editable=true}={})
+    {
+        // button's position is relative to the app window's position
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.border_radius = border_radius;
+        this.border_color = border_color;
+        this.noStroke = noStroke;
+        this.background_color = background_color;
+        this.value = initial_text;
+        this.text_size = text_size;
+        this.text_color = text_color;
+        this.text_font = text_font;
+
+        // controls
+        this.is_editable = is_editable;
+        this.is_editing = false;
+        this.cursor_pos = this.value.length;
+        this.submit_callback = submit_callback;
+        this.window_instance = window_instance;
+        // this gives a frame countdown delay before the cursor resumes blinking
+        this.cursor_blink_delay = 30;
+        // text selecting
+        this.is_being_pressed = false;
+        // -1 means no selected text
+        this.selection_cursor_start = -1;
+        // this.press_y = 0;
+    }
+
+    //====================================================================
+
+    is_mouse_over (window_x, window_y)
+    {
+        let xlow  = this.x + window_x;
+        let xhigh = xlow + this.width;
+        let ylow  = this.y + window_y;
+        let yhigh = ylow + this.height;
+        return xlow < mouseX && mouseX < xhigh && ylow < mouseY && mouseY < yhigh;
+    }
+
+    //====================================================================
+
+    pressed (window_x, window_y)
+    {
+        if (this.is_mouse_over (window_x, window_y))
+        {
+            this.is_being_pressed = true;
+            // shift key should put cursor into selected cursor
+            if (keyIsDown (SHIFT))
+            {
+                if (this.selection_cursor_start == -1 || this.selection_cursor_start == this.cursor_pos)
+                    this.selection_cursor_start = this.cursor_pos;
+            }
+            else
+                // save mouse position for selecting text
+                this.selection_cursor_start = this.x_to_nearest_index (window_x, window_y, mouseX);
+            // mouse pressed on this textbox, so activate editing
+            this.is_editing = true;
+            return true;
+        }
+        // mouse press is off of textbox
+        // unfocus
+        this.is_editing = false;
+        return false;
+    }
+
+    //====================================================================
+
+    released (window_x, window_y)
+    {
+        if (this.is_being_pressed && this.is_mouse_over (window_x, window_y))
+        {
+
+        }
+        // mouse was released so we cannot be still pressing this button
+        this.is_being_pressed = false;
+        // if nothing is selected, mark it as unselected
+        if (this.selection_cursor_start == this.cursor_pos)
+            this.selection_cursor_start = -1;
+    }
+
+    //====================================================================
+
+    doubleClicked (window_x, window_y)
+    {
+        // ensure doubleclicked on this element
+        if (!this.is_mouse_over (window_x, window_y))
+            return false;
+        // just select all text (for now)
+        // ** this should select a word
+        this.selection_cursor_start = 0;
+        this.cursor_pos = this.value.length;
+    }
+
+    //====================================================================
+
+    keyPressed ()
+    {
+        // ignore keypresses if not editing
+        if (!this.is_editing)
+            return;
+        // reset cursor blink delay
+        this.cursor_blink_delay = 30;
+        // cursor movement
+        // cursor left (if not already all the way left)
+        if (keyCode == LEFT_ARROW && this.cursor_pos > 0)
+        {
+            // if we were holding shift and nothing was selected, start selection
+            if (keyIsDown (SHIFT) && this.selection_cursor_start == -1)
+                this.selection_cursor_start = this.cursor_pos;
+            // if we werent holding shift, then reset selection cursor
+            if (!keyIsDown (SHIFT))
+                this.selection_cursor_start = -1;
+            // move cursor left
+            --this.cursor_pos;
+        }
+        // cursor right (if not already all the way right)
+        else if (keyCode == RIGHT_ARROW && this.cursor_pos < this.value.length)
+        {
+            // if we were holding shift and nothing was selected, start selection
+            if (keyIsDown (SHIFT) && this.selection_cursor_start == -1)
+                this.selection_cursor_start = this.cursor_pos;
+            // if we werent holding shift, then reset selection cursor
+            if (!keyIsDown (SHIFT))
+                this.selection_cursor_start = -1;
+            // move cursor right
+            ++this.cursor_pos;
+        }
+
+        // ensure this textbox is editable
+        if (!this.is_editable)
+            return;
+
+        // deleting chars
+        if (keyCode == BACKSPACE)
+        {
+            // deleting selected text
+            if (this.selection_cursor_start != -1)
+            {
+                // delete selected text
+                let left_i = this.selection_cursor_start < this.cursor_pos ? this.selection_cursor_start : this.cursor_pos;
+                let right_i = this.selection_cursor_start < this.cursor_pos ? this.cursor_pos : this.selection_cursor_start;
+                this.value = this.value.substring (0, left_i) + this.value.substring (right_i, this.value.length);
+                // reset cursor pos
+                this.cursor_pos = left_i;
+                // no longer selecting text
+                this.selection_cursor_start = -1;
+            }
+            // no selected text
+            // ensure there is a char left of the cursor
+            else if (this.cursor_pos > 0)
+            {
+                // remove prev char
+                this.value = this.value.substring (0, this.cursor_pos-1) + this.value.substring (this.cursor_pos, this.value.length);
+                // shift cursor back
+                --this.cursor_pos;
+            }
+        }
+        if (keyCode == DELETE)
+        {
+            // deleting selected text
+            if (this.selection_cursor_start != -1)
+            {
+                // delete selected text
+                let left_i = this.selection_cursor_start < this.cursor_pos ? this.selection_cursor_start : this.cursor_pos;
+                let right_i = this.selection_cursor_start < this.cursor_pos ? this.cursor_pos : this.selection_cursor_start;
+                this.value = this.value.substring (0, left_i) + this.value.substring (right_i, this.value.length);
+                // reset cursor pos
+                this.cursor_pos = left_i;
+                // no longer selecting text
+                this.selection_cursor_start = -1;
+            }
+            // no selected text
+            // ensure there is a char right of the cursor
+            else if (this.cursor_pos < this.value.length)
+            {
+                // remove next char
+                this.value = this.value.substring (0, this.cursor_pos) + this.value.substring (this.cursor_pos+1, this.value.length);
+                // cursor stays in same position
+            }
+        }
+        // adding chars
+        let allowed_chars = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()[]{};':\",.<>/?"
+        if (allowed_chars.includes (key))
+        {
+            // deleting selected text (if any)
+            if (this.selection_cursor_start != -1)
+            {
+                // delete selected text
+                let left_i = this.selection_cursor_start < this.cursor_pos ? this.selection_cursor_start : this.cursor_pos;
+                let right_i = this.selection_cursor_start < this.cursor_pos ? this.cursor_pos : this.selection_cursor_start;
+                this.value = this.value.substring (0, left_i) + this.value.substring (right_i, this.value.length);
+                // reset cursor pos
+                this.cursor_pos = left_i;
+                // no longer selecting text
+                this.selection_cursor_start = -1;
+            }
+            // insert char
+            this.value = this.value.substring (0, this.cursor_pos) + key + this.value.substring (this.cursor_pos, this.value.length);
+            // move cursor
+            this.cursor_pos++;
+        }
+    }
+
+    //====================================================================
+
+    x_to_nearest_index (window_x, window_y, x)
+    {
+        noStroke ();
+        fill (this.text_color);
+        textSize (this.text_size);
+        textAlign (LEFT, CENTER);
+        textFont (this.text_font);
+        let inner_padding = 5;
+        let text_x = this.x+window_x+inner_padding;
+        let new_cursor_pos = 0;
+        for (let i = 0; i < this.value.length+1; ++i)
+        {
+            let lhs_str = this.value.substring (0, i);
+            let new_width = textWidth (lhs_str);
+            // check if mouse is left of this char
+            if (x < text_x+new_width)
+            {
+                return new_cursor_pos;
+            }
+            ++new_cursor_pos;
+        }
+        return this.value.length;
+    }
+
+    //====================================================================
+
+    show (window_x, window_y)
+    {
+        push ();
+
+        let x = this.x + window_x;
+        let y = this.y + window_y;
+
+        if (this.is_mouse_over (window_x, window_y))
+            cursor (TEXT);
+
+        // draw textbox
+        if (this.noStroke)
+            noStroke ();
+        else
+        {
+            stroke (this.border_color);
+            strokeWeight (1);
+        }
+        fill (this.background_color);
+        // outline textbox if user is editing
+        if (this.is_editing)
+        {
+            stroke ("#00BCFF");
+            strokeWeight (1);
+        }
+        rect (x, y, this.width, this.height, this.border_radius);
+
+        // draw text
+        noStroke ();
+        fill (this.text_color);
+        textSize (this.text_size);
+        textAlign (LEFT, CENTER);
+        textFont (this.text_font);
+        let inner_padding = 5;
+        let text_x = x+inner_padding;
+        
+        // if user is currently selecting text (mouse pressed but not yet released),
+        // we need to update the textbox cursor to the mouse cursor position
+        // (or as close to the mouse cursor as possible)
+        if (this.is_being_pressed)
+        {
+            this.cursor_pos = this.x_to_nearest_index (window_x, window_y, mouseX);
+        }
+        // draw selected text highlight (if text is selected)
+        if (this.selection_cursor_start != -1)
+        {
+            let left_highlight_x = (this.selection_cursor_start < this.cursor_pos) ?
+                text_x + textWidth (this.value.substring (0, this.selection_cursor_start)) :
+                text_x + textWidth (this.value.substring (0, this.cursor_pos));
+            let right_highlight_x = (this.selection_cursor_start < this.cursor_pos) ?
+                (left_highlight_x + textWidth (this.value.substring (this.selection_cursor_start, this.cursor_pos))) :
+                (left_highlight_x + textWidth (this.value.substring (this.cursor_pos, this.selection_cursor_start)));
+            noStroke ();
+            if (this.is_editing)
+                fill ("#00BCFF");
+            else
+                fill (255,255,255,75);
+            rect (left_highlight_x, y+inner_padding, right_highlight_x-left_highlight_x, this.height-2*inner_padding);
+        }
+
+        // finally draw text for real this time
+        noStroke ();
+        fill (this.text_color);
+        textSize (this.text_size);
+        textAlign (LEFT, CENTER);
+        textFont (this.text_font);
+        text (this.value, text_x, y+this.height/2);
+
+        // draw cursor (if editing)
+        if (this.is_editing)
+        {
+            // draw cursor line if on blink delay
+            let is_blink_delay_active = this.cursor_blink_delay > 0;
+            // show cursor for first half of a second and hide for the second half of the second
+            // to get the cursor blinking effect
+            // this relies on 60 fps - probably not ideal
+            let is_blink_on = frameCount % 60 < 30;
+            if (is_blink_delay_active || is_blink_on)
+            {
+                // cursor line is draw to the left of the current char position
+                // or end of line if cursor is at the end of the input
+                let cursor_x = x + inner_padding + textWidth (this.value.substring (0, this.cursor_pos));
+                stroke ("#fff");
+                strokeWeight (1);
+                noFill ();
+                line (cursor_x, y+inner_padding, cursor_x, y+this.height-inner_padding);
+            }
+            this.cursor_blink_delay--;
+        }
+
+        pop ();
+    }
+}
