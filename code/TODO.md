@@ -116,6 +116,15 @@ would the windows list be better as
 - a focused list?
 - a minimized list?
 
+cursor
+- make my own cursor
+- disable real cursor - noCursor() p5js
+
+hover icons
+- have a separate mechanic for drawing hovering icons like draggable icons across windows
+- or like mouse hover popup text
+- or like right click popup menus
+
 change all global vars to have g_ to denote global - just for cleanliness
 
 https://squaremyimage.com/

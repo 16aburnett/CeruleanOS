@@ -1,4 +1,4 @@
-// GameVM
+// CeruleanOS
 // Author: Amy Burnett
 //========================================================================
 // Globals
@@ -85,6 +85,12 @@ let desktop_app_file2;
 let desktop_app_file3;
 let desktop_app_file4;
 
+// filesystem
+let disk0;
+
+// popups
+let mouseHoverPopUpManager;
+
 //========================================================================
 
 // preload all images before drawing canvas
@@ -118,6 +124,35 @@ function preload ()
 function setup ()
 {
     createCanvas (windowWidth, windowHeight);
+
+    // setup initial filesystem
+    disk0 = new Directory (null, "/", [
+        new Directory (null, "bin"),
+        new Directory (null, "home", [
+            new File (null, "hello.txt", "Hello, World!"),
+            new Directory (null, "Desktop", [
+                new Directory (null, "Trash Bin", [], {icon:icon_trash_bin, open_with_application:FileExplorerAppWindow}),
+                new File (null, "Generic Desktop App", {icon:taskbar_icon_generic_window, open_with_application:Window}),
+                new File (null, "Messages", {icon:taskbar_icon_messages, open_with_application:Window}),
+                new File (null, "Calculator", {icon:taskbar_icon_calculator, open_with_application:CalculatorAppWindow}),
+                new File (null, "File Explorer", {icon:taskbar_icon_file_explorer, open_with_application:FileExplorerAppWindow}),
+                new File (null, "Terminal", {icon:taskbar_icon_terminal, open_with_application:TerminalAppWindow}),
+                new Directory (null, "Folder 0", []),
+                new Directory (null, "Folder 1", []),
+                new Directory (null, "Folder 2", []),
+                new File (null, "File 0"),
+                new File (null, "File 1"),
+                new File (null, "File 2"),
+                new File (null, "File 3"),
+                new File (null, "File 4"),
+            ]),
+            new Directory (null, "Downloads", []),
+            new Directory (null, "Documents", []),
+            new Directory (null, "Pictures", []),
+            new Directory (null, "Music", []),
+            new Directory (null, "Videos", [])
+        ])
+    ]);
 
     // setup taskbar apps
     generic_window_button0 = new TaskBarApp (0, 0, {
@@ -313,6 +348,9 @@ function setup ()
         name:"Settings"
     });
 
+    // mouse over popup manager
+    mouseHoverPopUpManager = new MouseHoverPopUpManager ();
+
 }
 
 //========================================================================
@@ -324,7 +362,14 @@ function draw ()
 
     draw_desktop ();
 
+    // draw any floating elements
+    // like hover popups
+    // or icons being dragged (and attached to mouse)
+
     // draw_terminal ();
+
+    // draw any popups
+    mouseHoverPopUpManager.show ();
 }
 
 //========================================================================

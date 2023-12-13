@@ -41,17 +41,6 @@ let terminal_text_color = "#eeeeee";
 let terminal_text_font = "Cascadia Code";
 // let terminal_text_font = "Courier New";
 
-let disk0 = new Directory (null, "/", [
-    new Directory (null, "bin"),
-    new Directory (null, "home", [
-        new File (null, "hello.txt", "Hello, World!"),
-        new Directory (null, "amy", [
-            new File (null, "run_me", `cat "I like pizza!\\n"`)
-        ])
-    ])
-]);
-let current_working_directory = disk0;
-
 //========================================================================
 
 // this is super simple for right now

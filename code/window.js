@@ -5,6 +5,8 @@
 
 //========================================================================
 
+// Generic Window class
+// user applications should extend this class
 // resizeable feature inspired by https://codepen.io/DanielHarty/pen/vRRxxL?editors=0010
 class Window
 {
@@ -33,38 +35,24 @@ class Window
 
         this.taskbar_app = null;
 
-        // header
-        // exit
-        // maximize
-        // minimize
         this.is_minimized = false;
 
         // window content
         this.background_color = "#fff";
-        // list of user elements that could be clicked on
+        // list of user elements that could be interacted with
         // base window class will handle calling pressed, released, doubleClicked etc
-        // Window users just need to add their clickable window elements to this array
-        this.clickables = [];
+        // Window users just need to add their interactable window elements to this array
+        this.interactables = [];
 
         // even though pressing on a window generally does nothing,
-        // this exists to keep track of if something on this window was pressed
+        // this exists to keep track of if something on this window was pressed.
         // if something was pressed on this window,
         // we need to know to process mouse buttons being released
         this.is_being_pressed = false;
 
     }
 
-    resize (prev_window_width, prev_window_height)
-    {
-        // let width_ratio = prev_window_width / windowWidth;
-        // let height_ratio = prev_window_height / windowHeight;
-        // this.width = max(this.width / width_ratio, this.minimum_width);
-        // this.height = max(this.height / height_ratio, this.minimum_height);
-        // // ensure dims dont get larger than window
-        // this.width = min (this.width, windowWidth);
-        // this.height = min (this.height, windowHeight);
-
-    }
+    //====================================================================
 
     is_mouse_over ()
     {
@@ -74,6 +62,8 @@ class Window
         let yhigh = ylow + this.height;
         return xlow < mouseX && mouseX < xhigh && ylow < mouseY && mouseY < yhigh;
     }
+
+    //====================================================================
 
     // returns true if mouse is over window header, false otherwise
     // returns false if mouse is over exit button on header
@@ -89,6 +79,8 @@ class Window
             && !this.is_mouse_over_minimize_button ();
     }
 
+    //====================================================================
+
     is_mouse_over_resize_box ()
     {
         let xlow  = this.x+this.width-this.resize_box_size;
@@ -97,6 +89,8 @@ class Window
         let yhigh = this.y + this.height;
         return xlow < mouseX && mouseX < xhigh && ylow < mouseY && mouseY < yhigh;
     }
+
+    //====================================================================
 
     is_mouse_over_exit_button ()
     {
@@ -113,6 +107,8 @@ class Window
         let yhigh = ylow + this.header_height;
         return xlow < mouseX && mouseX < xhigh && ylow < mouseY && mouseY < yhigh;
     }
+
+    //====================================================================
 
     is_mouse_over_maximize_button ()
     {
@@ -133,6 +129,8 @@ class Window
         let yhigh = ylow + this.header_height;
         return xlow < mouseX && mouseX < xhigh && ylow < mouseY && mouseY < yhigh;
     }
+
+    //====================================================================
 
     is_mouse_over_minimize_button ()
     {
@@ -158,6 +156,15 @@ class Window
         return xlow < mouseX && mouseX < xhigh && ylow < mouseY && mouseY < yhigh;
     }
 
+    //====================================================================
+
+    resize ()
+    {
+
+    }
+
+    //====================================================================
+
     update ()
     {
         // move window if being dragged
@@ -180,6 +187,7 @@ class Window
                 this.x = -this.width+50;
         }
 
+        // resize window (if being resized)
         if (this.is_resizing)
         {
             if (mouseX - this.x + this.offset_x > this.minimum_width) {
@@ -195,17 +203,24 @@ class Window
         }
     }
 
+    //====================================================================
+
     // unfocus should handle unfocusing the window and any focus-able elements
     unfocus ()
     {
-        for (let clickable of this.clickables)
+        for (let interactable of this.interactables)
         {
-            // *this should really be clickable.unfocus, but this should work
-            clickable.pressed ();
+            // *this should really be interactable.unfocus, but this should work
+            interactable.pressed ();
         }
         this.is_focused = false;
     }
 
+    //====================================================================
+
+    // checks if the incoming mouse click happened on this window 
+    // or on any of this window's elements and processes the mouse press
+    // returns true if mouse press was on this window, false otherwise
     pressed ()
     {
         // ensure window is not minimized
@@ -267,23 +282,27 @@ class Window
             was_pressed_on = true;
         }
 
-        // process clickables
-        for (let clickable of this.clickables)
+        // process interactables
+        for (let interactable of this.interactables)
         {
-            clickable.pressed (this.x, this.y);
+            interactable.pressed (this.x, this.y);
         }
 
         return was_pressed_on;
     }
 
+    //====================================================================
+
+    // checks if the incoming mouse release happened on this window 
+    // or on any of this window's elements and processes the mouse release
     released ()
     {
-        // process clickables if we pressed something on this window
+        // process interactables if we pressed something on this window
         if (this.is_being_pressed)
         {
-            for (let clickable of this.clickables)
+            for (let interactable of this.interactables)
             {
-                clickable.released (this.x, this.y);
+                interactable.released (this.x, this.y);
             }
         }
         this.is_dragging = false;
@@ -291,6 +310,10 @@ class Window
         this.is_being_pressed = false;
     }
     
+    //====================================================================
+
+    // checks if the incoming mouse double click happened on this window 
+    // or on any of this window's elements and processes the mouse double click
     doubleClicked ()
     {
         // ensure window is not minimized
@@ -301,14 +324,17 @@ class Window
             return false;
         // reaches here if this window was doubleclicked
         console.log ("window doubleclick");
-        // check if window's clickables were doubleclicked
-        for (let clickable of this.clickables)
+        // check if window's interactables were doubleclicked
+        for (let interactable of this.interactables)
         {
-            clickable.doubleClicked (this.x, this.y);
+            interactable.doubleClicked (this.x, this.y);
         }
         return true;
     }
 
+    //====================================================================
+
+    // handles the incoming key press
     keyPressed ()
     {
         // ignore keyPress if window is not focused
@@ -320,12 +346,15 @@ class Window
         // ** and tab (and shift+tab) iterating over interactables
 
         // send keypress to interactable elements
-        for (let interactable of this.clickables)
+        for (let interactable of this.interactables)
         {
             interactable.keyPressed ();
         }
     }
 
+    //====================================================================
+
+    // draws this window to the canvas
     show ()
     {
         // ensure window is not minimized
@@ -398,7 +427,6 @@ class Window
             cursor (CROSS);
         }
 
-
         // draw exit button
         let header_button_padding = 10;
         let exit_button_font = "Courier New";
@@ -467,6 +495,8 @@ class Window
         this.draw_window_content ();
     }
 
+    //====================================================================
+
     // prints the main content of the window
     // should be overloaded
     draw_window_content ()
@@ -483,14 +513,16 @@ class Window
     }
 }
 
-// === WINDOW ELEMENTS ===================================================
+//========================================================================
+//=== WINDOW ELEMENTS ====================================================
+//========================================================================
 
 // App window element
 // a clickable button
 // when the button is pressed, it calls the onclick function provided
 class WindowButton
 {
-    constructor (x, y, label, onclick, window_instance, {width=50, height=25, border_radius=10, border_color="#000", noStroke=false, label_text_size=25, background_color="#fff", label_color="#000", mouse_over_background_color="#ccc", icon=null}={})
+    constructor (x, y, label, onclick, window_instance, {width=50, height=25, border_radius=10, border_color="#000", noStroke=false, label_text_size=25, background_color="#fff", label_color="#000", mouse_over_background_color="#ccc", icon=null, is_disabled=false, popup_text=""}={})
     {
         // button's position is relative to the app window's position
         this.x = x;
@@ -505,15 +537,22 @@ class WindowButton
         this.label = label;
         this.label_text_size = label_text_size;
         this.label_color = label_color;
+        this.disabled_label_color = "#777";
         this.icon = icon;
 
         // controls
         this.is_being_pressed = false;
-
         this.onclick_function = onclick;
-
         this.window_instance = window_instance;
+        this.is_disabled = is_disabled;
+
+        // popup text
+        this.mouse_paused_counter = 0;
+        this.popup_text = popup_text;
+        this.has_popup = false;
     }
+
+    //====================================================================
 
     is_mouse_over (window_x, window_y)
     {
@@ -524,8 +563,19 @@ class WindowButton
         return xlow < mouseX && mouseX < xhigh && ylow < mouseY && mouseY < yhigh;
     }
 
+    //====================================================================
+
     pressed (window_x, window_y)
     {
+        // remove popup
+        if (this.has_popup)
+        {
+            mouseHoverPopUpManager.remove_popup ();
+            this.has_popup = false;
+        }
+        // ensure button is not disabled
+        if (this.is_disabled)
+            return false;
         if (this.is_mouse_over (window_x, window_y))
         {
             this.is_being_pressed = true;
@@ -534,8 +584,16 @@ class WindowButton
         return false;
     }
 
+    //====================================================================
+
     released (window_x, window_y)
     {
+        // remove popup
+        if (this.has_popup)
+        {
+            mouseHoverPopUpManager.remove_popup ();
+            this.has_popup = false;
+        }
         // if we pressed and released while the mouse was over the button,,
         // then submit the button press
         if (this.is_being_pressed && this.is_mouse_over (window_x, window_y))
@@ -547,18 +605,33 @@ class WindowButton
         this.is_being_pressed = false;
     }
 
+    //====================================================================
+
     doubleClicked (window_x, window_y)
     {
+        // remove popup
+        if (this.has_popup)
+        {
+            mouseHoverPopUpManager.remove_popup ();
+            this.has_popup = false;
+        }
         // do nothing
     }
 
+    //====================================================================
+
     keyPressed ()
     {
+        // ensure button is not disabled
+        if (this.is_disabled)
+            return;
         // ignore if not focused
         if (!this.is_focused)
             return;
-        // TODO - SPACEBAR should press button
+        // TODO - SPACEBAR should press/submit button
     }
+
+    //====================================================================
 
     show (window_x, window_y)
     {
@@ -567,12 +640,41 @@ class WindowButton
         let x = this.x + window_x;
         let y = this.y + window_y;
 
+        // popup text
+        // display if mouse was hovering at rest for 0.5 sec over this
+        // mouse is at rest over this
+        if (mouseX == pmouseX && mouseY == pmouseY && this.is_mouse_over (window_x, window_y))
+        {
+            // advance "paused" counter by one frame
+            this.mouse_paused_counter++;
+            // draw popup if counter reached 0.5 sec, if not already added
+            if (this.mouse_paused_counter / frameRate () > 0.5 && !mouseHoverPopUpManager.has_popup)
+            {
+                mouseHoverPopUpManager.add_popup (this.popup_text);
+                this.has_popup = true;
+            }
+        }
+        // mouse moving
+        else if (!(mouseX == pmouseX && mouseY == pmouseY))
+        {
+            // reset "paused" counter
+            this.mouse_paused_counter = 0;
+            // if mouse exited and we had a popup, remove popup
+            if (!this.is_mouse_over (window_x, window_y) && this.has_popup)
+            {
+                mouseHoverPopUpManager.remove_popup ();
+                this.has_popup = false;
+            }
+        }
+
         // draw button
-        if (this.is_mouse_over (window_x, window_y))
+        // highlight if mouse is over button and button is not disabled
+        if (this.is_mouse_over (window_x, window_y) && !this.is_disabled)
         {
             fill (this.mouse_over_background_color);
             cursor (HAND);
         }
+        // otherwise, use normal background color
         else
         {
             fill (this.background_color);
@@ -591,6 +693,8 @@ class WindowButton
         if (this.icon == null)
         {
             fill (this.label_color);
+            if (this.is_disabled)
+                fill (this.disabled_label_color);
             noStroke ();
             textFont ("Arial");
             textStyle (BOLD);
@@ -817,6 +921,11 @@ class WindowTextBox
             // move cursor
             this.cursor_pos++;
         }
+        // submitting textbox
+        if (keyCode == ENTER)
+        {
+            this.submit_callback ();
+        }
     }
 
     //====================================================================
@@ -940,3 +1049,468 @@ class WindowTextBox
         pop ();
     }
 }
+
+//========================================================================
+
+// displays multiple files
+// similar to a desktop where you have multiple icons for different files
+// - files can be moved around
+// - display can accept drag+drop files
+// - supports click+drag for selecting multiple files
+// - supports arrow key presses to move around a file cursor
+// - supports selecting all files via CTRL+A
+// - supports deleting files via select + backspace
+class WindowFileDisplay
+{
+    constructor (x, y, window_instance, {width=50, height=25, border_radius=0, border_color="#000", noStroke=false, text_size=25, background_color="#fff", text_color="#000", text_font="Arial", dir_change_callback=null}={})
+    {
+        // button's position is relative to the app window's position
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.border_radius = border_radius;
+        this.border_color = border_color;
+        this.noStroke = noStroke;
+        this.background_color = background_color;
+        this.text_size = text_size;
+        this.text_color = text_color;
+        this.text_font = text_font;
+
+        // controls
+        this.window_instance = window_instance;
+        this.is_focused = false;
+        this.files = [];
+        this.dir_change_callback = dir_change_callback;
+
+    }
+
+    //====================================================================
+
+    is_mouse_over (window_x, window_y)
+    {
+        let xlow  = this.x + window_x;
+        let xhigh = xlow + this.width;
+        let ylow  = this.y + window_y;
+        let yhigh = ylow + this.height;
+        return xlow < mouseX && mouseX < xhigh && ylow < mouseY && mouseY < yhigh;
+    }
+
+    //====================================================================
+
+    pressed (window_x, window_y)
+    {
+        // pass press along to icons
+        for (let file of this.files)
+        {
+            file.pressed (this.x+window_x, this.y+window_y);
+        }
+
+        if (this.is_mouse_over (window_x, window_y))
+        {
+            this.is_being_pressed = true;
+            this.is_focused = true;
+            return true;
+        }
+        // mouse press is off of file display
+        // unfocus
+        this.is_focused = false;
+        return false;
+    }
+
+    //====================================================================
+
+    released (window_x, window_y)
+    {
+        // pass release along to icons
+        for (let file of this.files)
+        {
+            file.released (this.x+window_x, this.y+window_y);
+        }
+
+        if (this.is_being_pressed && this.is_mouse_over (window_x, window_y))
+        {
+
+        }
+        this.is_being_pressed = false;
+    }
+
+    //====================================================================
+
+    doubleClicked (window_x, window_y)
+    {
+        // ensure doubleclicked on this element
+        if (!this.is_mouse_over (window_x, window_y))
+            return false;
+        // pass doubleclick along to icons
+        for (let file of this.files)
+        {
+            let was_doubleclicked = file.doubleClicked (this.x+window_x, this.y+window_y);
+            if (was_doubleclicked) 
+            {
+                // check if the doubleclick was on a directory
+                // doubleclicking directory should change current file explorer
+                if (file.file_obj instanceof Directory)
+                {
+                    if (this.dir_change_callback != null)
+                        this.dir_change_callback (file.file_obj);
+                }
+                return true;
+            }
+        }
+        return true;
+    }
+
+    //====================================================================
+
+    keyPressed ()
+    {
+        // only accept keypresses if this is focused
+        // ensure this is focused
+        if (!this.is_focused)
+            return;
+        // cursor movement
+        // cursor left (if not already all the way left)
+        if (keyCode == LEFT_ARROW && this.cursor_pos > 0)
+        {
+            // // if we were holding shift and nothing was selected, start selection
+            // if (keyIsDown (SHIFT) && this.selection_cursor_start == -1)
+            //     this.selection_cursor_start = this.cursor_pos;
+            // // if we werent holding shift, then reset selection cursor
+            // if (!keyIsDown (SHIFT))
+            //     this.selection_cursor_start = -1;
+            // // move cursor left
+            // --this.cursor_pos;
+        }
+        // cursor right (if not already all the way right)
+        else if (keyCode == RIGHT_ARROW && this.cursor_pos < this.value.length)
+        {
+            // // if we were holding shift and nothing was selected, start selection
+            // if (keyIsDown (SHIFT) && this.selection_cursor_start == -1)
+            //     this.selection_cursor_start = this.cursor_pos;
+            // // if we werent holding shift, then reset selection cursor
+            // if (!keyIsDown (SHIFT))
+            //     this.selection_cursor_start = -1;
+            // // move cursor right
+            // ++this.cursor_pos;
+        }
+
+        // deleting files
+        if (keyCode == BACKSPACE || keyCode == DELETE)
+        {
+
+        }
+    }
+
+    //====================================================================
+
+    x_to_nearest_index (window_x, window_y, x)
+    {
+        // noStroke ();
+        // fill (this.text_color);
+        // textSize (this.text_size);
+        // textAlign (LEFT, CENTER);
+        // textFont (this.text_font);
+        // let inner_padding = 5;
+        // let text_x = this.x+window_x+inner_padding;
+        // let new_cursor_pos = 0;
+        // for (let i = 0; i < this.value.length+1; ++i)
+        // {
+        //     let lhs_str = this.value.substring (0, i);
+        //     let new_width = textWidth (lhs_str);
+        //     // check if mouse is left of this char
+        //     if (x < text_x+new_width)
+        //     {
+        //         return new_cursor_pos;
+        //     }
+        //     ++new_cursor_pos;
+        // }
+        // return this.value.length;
+    }
+
+    //====================================================================
+
+    // filename is separate for the case of '.' and '..'
+    add_file (file_name, file_obj)
+    {
+        this.files.push (new WindowFileIcon (this.x, this.y, file_name, file_obj.icon, file_obj.open_with_application, file_obj, this, {}));
+    }
+
+    //====================================================================
+
+    // draw file display to the canvas
+    show (window_x, window_y)
+    {
+        push ();
+
+        let x = this.x + window_x;
+        let y = this.y + window_y;
+
+        // draw background
+        noStroke ();
+        if (this.is_focused)
+        {
+            stroke ("#00BCFF");
+            strokeWeight (1);
+        }
+        fill (this.background_color);
+        rect (x, y, this.width, this.height);
+
+        // draw files
+        // arrange in a grid
+        let padding = 5;
+        let i = padding;
+        let j = padding;
+        for (let file of this.files)
+        {
+            // update grid position
+            file.x = j;
+            file.y = i;
+            // draw file
+            // x and y is not relative to window, but rather to this file display
+            file.show (x, y);
+            // move to next position
+            j += file.width;
+            // move to next row if we exceeded
+            if (j+file.width > this.width)
+            {
+                j = padding;
+                i += file.height;
+            }
+        }
+
+        pop ();
+    }
+}
+
+//========================================================================
+
+class WindowFileIcon
+{
+    constructor (x, y, name, icon, open_with_application, file_obj, window_instance, {width=60, height=60, icon_width=25, icon_height=25, border_radius=0, border_color="#000", noStroke=true, text_size=25, background_color=[0,0,0,0], text_color="#fff", text_font="Arial"}={})
+    {
+        // element's position is relative to the app window's position
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.border_radius = border_radius;
+        this.border_color = border_color;
+        this.noStroke = noStroke;
+        this.background_color = background_color;
+        this.name = name;
+        this.icon = icon;
+        this.icon_width = icon_width;
+        this.icon_height = icon_height;
+        this.text_size = text_size;
+        this.text_color = text_color;
+        this.text_font = text_font;
+        this.open_with_application = open_with_application;
+        this.file_obj = file_obj;
+
+        // controls
+        this.window_instance = window_instance;
+        this.is_focused = false;
+        this.is_being_pressed = false;
+
+        // popup text
+        this.mouse_paused_counter = 0;
+        this.popup_text = name;
+        this.has_popup = false;
+
+    }
+
+    //====================================================================
+
+    is_mouse_over (window_x, window_y)
+    {
+        let xlow  = this.x + window_x;
+        let xhigh = xlow + this.width;
+        let ylow  = this.y + window_y;
+        let yhigh = ylow + this.height;
+        return xlow < mouseX && mouseX < xhigh && ylow < mouseY && mouseY < yhigh;
+    }
+
+    //====================================================================
+
+    pressed (window_x, window_y)
+    {
+        // remove popup
+        if (this.has_popup)
+        {
+            mouseHoverPopUpManager.remove_popup ();
+            this.has_popup = false;
+        }
+        if (this.is_mouse_over (window_x, window_y))
+        {
+            this.is_being_pressed = true;
+            this.is_focused = true;
+            return true;
+        }
+        // mouse press is off of file display
+        // unfocus
+        this.is_focused = false;
+        return false;
+    }
+
+    //====================================================================
+
+    released (window_x, window_y)
+    {
+        // remove popup
+        if (this.has_popup)
+        {
+            mouseHoverPopUpManager.remove_popup ();
+            this.has_popup = false;
+        }
+        if (this.is_being_pressed && this.is_mouse_over (window_x, window_y))
+        {
+
+        }
+        this.is_being_pressed = false;
+    }
+
+    //====================================================================
+
+    doubleClicked (window_x, window_y)
+    {
+        // remove popup
+        if (this.has_popup)
+        {
+            mouseHoverPopUpManager.remove_popup ();
+            this.has_popup = false;
+        }
+        // ensure doubleclicked on this element
+        if (!this.is_mouse_over (window_x, window_y))
+            return false;
+        // ensure this is not a directory
+        // FileDisplay will handle doubleclicks to directories
+        if (this.file_obj instanceof Directory)
+            return true;
+        // open this file with the given application
+        let app_window = new this.open_with_application (0, 0);
+        // **create taskbar app?
+        windows.push (app_window);
+        is_a_window_focused = true;
+        // was doubleclicked on so return true
+        return true;
+    }
+
+    //====================================================================
+
+    keyPressed ()
+    {
+        // only accept keypresses if this is focused
+        // ensure this is focused
+        if (!this.is_focused)
+            return;
+        // Nothing
+    }
+
+    //====================================================================
+
+    update ()
+    {
+        // move app if being dragged
+        if (this.is_dragging)
+        {
+            // this.x = mouseX + this.offset_x;
+            // this.y = mouseY + this.offset_y;
+            // // ensure app doesnt leave top of screen
+            // if (this.y < 0)
+            //     this.y = 0;
+            // // ensure app doesnt go below taskbar
+            // if (this.y+this.height > windowHeight-taskbar_height)
+            //     this.y = windowHeight-taskbar_height-this.height;
+            // // ensure the whole app cannot leave right side of screen
+            // // arbitrary 50 pixel buffer
+            // if (this.x+50 > windowWidth)
+            //     this.x = windowWidth-50;
+            // // ensure the whole app cannot leave left side of screen
+            // if (this.x+this.width-50 < 0)
+            //     this.x = -this.width+50;
+        }
+    }
+
+    //====================================================================
+
+    // draw file display to the canvas
+    show (window_x, window_y)
+    {
+        push ();
+
+        let x = this.x + window_x;
+        let y = this.y + window_y;
+
+        // background
+        noStroke ();
+        fill (this.background_color);
+        rect (x, y, this.width, this.height, this.border_radius);
+
+        // popup text
+        // display if mouse was hovering at rest for 0.5 sec over this
+        // mouse is at rest over icon
+        if (mouseX == pmouseX && mouseY == pmouseY && this.is_mouse_over (window_x, window_y))
+        {
+            // advance "paused" counter by one frame
+            this.mouse_paused_counter++;
+            // draw popup if counter reached 0.5 sec, if not already added
+            if (this.mouse_paused_counter / frameRate () > 0.5 && !mouseHoverPopUpManager.has_popup)
+            {
+                mouseHoverPopUpManager.add_popup (this.popup_text);
+                this.has_popup = true;
+            }
+        }
+        // mouse moving
+        else if (!(mouseX == pmouseX && mouseY == pmouseY))
+        {
+            // reset "paused" counter
+            this.mouse_paused_counter = 0;
+            // if mouse exited and we had a popup, remove popup
+            if (!this.is_mouse_over (window_x, window_y) && this.has_popup)
+            {
+                mouseHoverPopUpManager.remove_popup ();
+                this.has_popup = false;
+            }
+        }
+
+        // highlighting mouse over
+        if ((this.is_mouse_over (window_x, window_y) && !this.is_being_pressed) || this.is_focused)
+        {
+            // highlight icon
+            noStroke ();
+            fill (255,255,255,25);
+            rect (x, y, this.width, this.height, 10);
+        }
+
+        // highlight more if mouse pressed
+        if (this.is_being_pressed)
+        {
+            noStroke ();
+            fill (255,255,255,100);
+            rect (x, y, this.width, this.height, 10);
+        }
+
+        // draw icon
+        let widget_center_x = x + this.width / 2;
+        let widget_center_y = y + this.height / 2;
+        if (this.icon != null)
+            image (this.icon, widget_center_x-this.icon_width/2, y+5, this.icon_width, this.icon_height);
+
+        // draw text
+        noStroke ();
+        fill (255);
+        let text_size = 10;
+        textSize (text_size);
+        textFont ("Arial");
+        textWrap (WORD);
+        textAlign(CENTER, TOP);
+        let wrap_width = this.width;
+        text (this.name, x, y+5+this.icon_height+5, wrap_width);
+
+        pop ();
+    }
+
+}
+
+//========================================================================

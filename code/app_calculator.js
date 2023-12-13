@@ -44,49 +44,49 @@ class CalculatorAppWindow extends Window
 
         // row 0
         this.button_clear  = new WindowButton (button_panel_x + 0*(cell_width+cell_padding), button_panel_y + 0*(cell_height+cell_padding), "C", function() {this.window_instance.clear ()}, this, {width:cell_width, height:cell_height, background_color:"#777", mouse_over_background_color:"#bbb", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button_clear);
+        this.interactables.push (this.button_clear);
         this.button_lparen = new WindowButton (button_panel_x + 1*(cell_width+cell_padding), button_panel_y + 0*(cell_height+cell_padding), "(", function() {this.window_instance.lparen ();}, this, {width:cell_width, height:cell_height, background_color:"#777", mouse_over_background_color:"#bbb", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button_lparen);
+        this.interactables.push (this.button_lparen);
         this.button_rparen = new WindowButton (button_panel_x + 2*(cell_width+cell_padding), button_panel_y + 0*(cell_height+cell_padding), ")", function() {this.window_instance.rparen ();}, this, {width:cell_width, height:cell_height, background_color:"#777", mouse_over_background_color:"#bbb", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button_rparen);
+        this.interactables.push (this.button_rparen);
         this.button_delete = new WindowButton (button_panel_x + 3*(cell_width+cell_padding), button_panel_y + 0*(cell_height+cell_padding), "", function() {this.window_instance.delete_digit ()}, this, {width:cell_width, height:cell_height, background_color:"#777", mouse_over_background_color:"#bbb", noStroke:true, label_color:"#fff", icon:icon_backspace});
-        this.clickables.push (this.button_delete);
+        this.interactables.push (this.button_delete);
         // row 1
         this.button7       = new WindowButton (button_panel_x + 0*(cell_width+cell_padding), button_panel_y + 1*(cell_height+cell_padding), "7", function() {this.window_instance.insert_7();}, this, {width:cell_width, height:cell_height, background_color:"#444", mouse_over_background_color:"#666", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button7);
+        this.interactables.push (this.button7);
         this.button8       = new WindowButton (button_panel_x + 1*(cell_width+cell_padding), button_panel_y + 1*(cell_height+cell_padding), "8", function() {this.window_instance.insert_8();}, this, {width:cell_width, height:cell_height, background_color:"#444", mouse_over_background_color:"#666", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button8);
+        this.interactables.push (this.button8);
         this.button9       = new WindowButton (button_panel_x + 2*(cell_width+cell_padding), button_panel_y + 1*(cell_height+cell_padding), "9", function() {this.window_instance.insert_9();}, this, {width:cell_width, height:cell_height, background_color:"#444", mouse_over_background_color:"#666", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button9);
+        this.interactables.push (this.button9);
         this.button_div    = new WindowButton (button_panel_x + 3*(cell_width+cell_padding), button_panel_y + 1*(cell_height+cell_padding), "/", function() {this.window_instance.div ();}, this, {width:cell_width, height:cell_height, background_color:"#777", mouse_over_background_color:"#bbb", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button_div);
+        this.interactables.push (this.button_div);
         // row 2
         this.button4       = new WindowButton (button_panel_x + 0*(cell_width+cell_padding), button_panel_y + 2*(cell_height+cell_padding), "4", function() {this.window_instance.insert_4();}, this, {width:cell_width, height:cell_height, background_color:"#444", mouse_over_background_color:"#666", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button4);
+        this.interactables.push (this.button4);
         this.button5       = new WindowButton (button_panel_x + 1*(cell_width+cell_padding), button_panel_y + 2*(cell_height+cell_padding), "5", function() {this.window_instance.insert_5();}, this, {width:cell_width, height:cell_height, background_color:"#444", mouse_over_background_color:"#666", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button5);
+        this.interactables.push (this.button5);
         this.button6       = new WindowButton (button_panel_x + 2*(cell_width+cell_padding), button_panel_y + 2*(cell_height+cell_padding), "6", function() {this.window_instance.insert_6();}, this, {width:cell_width, height:cell_height, background_color:"#444", mouse_over_background_color:"#666", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button6);
+        this.interactables.push (this.button6);
         this.button_mul    = new WindowButton (button_panel_x + 3*(cell_width+cell_padding), button_panel_y + 2*(cell_height+cell_padding), "*", function() {this.window_instance.mul ();}, this, {width:cell_width, height:cell_height, background_color:"#777", mouse_over_background_color:"#bbb", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button_mul);
+        this.interactables.push (this.button_mul);
         // row 3
         this.button1       = new WindowButton (button_panel_x + 0*(cell_width+cell_padding), button_panel_y + 3*(cell_height+cell_padding), "1", function() {this.window_instance.insert_1();}, this, {width:cell_width, height:cell_height, background_color:"#444", mouse_over_background_color:"#666", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button1);
+        this.interactables.push (this.button1);
         this.button2       = new WindowButton (button_panel_x + 1*(cell_width+cell_padding), button_panel_y + 3*(cell_height+cell_padding), "2", function() {this.window_instance.insert_2();}, this, {width:cell_width, height:cell_height, background_color:"#444", mouse_over_background_color:"#666", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button2);
+        this.interactables.push (this.button2);
         this.button3       = new WindowButton (button_panel_x + 2*(cell_width+cell_padding), button_panel_y + 3*(cell_height+cell_padding), "3", function() {this.window_instance.insert_3();}, this, {width:cell_width, height:cell_height, background_color:"#444", mouse_over_background_color:"#666", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button3);
+        this.interactables.push (this.button3);
         this.button_sub    = new WindowButton (button_panel_x + 3*(cell_width+cell_padding), button_panel_y + 3*(cell_height+cell_padding), "-", function() {this.window_instance.sub ();}, this, {width:cell_width, height:cell_height, background_color:"#777", mouse_over_background_color:"#bbb", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button_sub);
+        this.interactables.push (this.button_sub);
         // row 4
         this.button0       = new WindowButton (button_panel_x + 0*(cell_width+cell_padding), button_panel_y + 4*(cell_height+cell_padding), "0", function() {this.window_instance.insert_0();}, this, {width:cell_width, height:cell_height, background_color:"#444", mouse_over_background_color:"#666", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button0);
+        this.interactables.push (this.button0);
         this.button_dot    = new WindowButton (button_panel_x + 1*(cell_width+cell_padding), button_panel_y + 4*(cell_height+cell_padding), ".", function() {this.window_instance.insert_decimal_point ();}, this, {width:cell_width, height:cell_height, background_color:"#444", mouse_over_background_color:"#666", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button_dot);
+        this.interactables.push (this.button_dot);
         this.button_equal  = new WindowButton (button_panel_x + 2*(cell_width+cell_padding), button_panel_y + 4*(cell_height+cell_padding), "=", function() {this.window_instance.equal ();}, this, {width:cell_width, height:cell_height, background_color:"#00BCFF", mouse_over_background_color:"#22DEFF", noStroke:true, label_color:"#333"});
-        this.clickables.push (this.button_equal);
+        this.interactables.push (this.button_equal);
         this.button_add    = new WindowButton (button_panel_x + 3*(cell_width+cell_padding), button_panel_y + 4*(cell_height+cell_padding), "+", function() {this.window_instance.add ();}, this, {width:cell_width, height:cell_height, background_color:"#777", mouse_over_background_color:"#bbb", noStroke:true, label_color:"#fff"});
-        this.clickables.push (this.button_add);
+        this.interactables.push (this.button_add);
 
         // calculator mechanics
         this.history = [];
@@ -173,7 +173,7 @@ class CalculatorAppWindow extends Window
     {
         let is_start = this.current_input_str == "0";
         let is_lparen = this.current_input_str[this.current_input_str.length-1] == '(';
-        let is_op = "+-/=".includes (this.current_input_str[this.current_input_str.length-1]);
+        let is_op = "+-*/".includes (this.current_input_str[this.current_input_str.length-1]);
         if (is_start || is_lparen || is_op)
         {
             if (is_start)
@@ -329,7 +329,7 @@ class CalculatorAppWindow extends Window
         text (str, this.x, this.y+this.header_height+10+20, display_width, display_height);
 
         // show buttons
-        for (let btn of this.clickables)
+        for (let btn of this.interactables)
         {
             btn.show (this.x, this.y);
         }
